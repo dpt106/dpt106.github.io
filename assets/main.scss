@@ -1,9 +1,15 @@
-// Terminal / CRT theme — replaces minima's default look.
-// Loaded automatically at the end of minima's stylesheet — see
-// https://github.com/jekyll/minima#customize.
-// Fonts loaded in _includes/custom-head.html. Overlay markup and boot
-// flicker in _includes/sub-footer.html — both are minima's documented
-// extension hooks.
+---
+# Only the main Sass file needs front matter (the dashes are enough)
+---
+
+@import "minima";
+
+// ============================================================
+// Terminal / CRT theme (Alien/Nostromo style) — appended after
+// minima's own styles so these rules win the cascade.
+// Fonts loaded in _includes/head.html. Overlay markup and boot
+// flicker script in _layouts/default.html.
+// ============================================================
 
 $term-bg: #050806;
 $term-green: #33ff66;
@@ -60,7 +66,7 @@ a:hover, a:focus {
   text-shadow: 0 0 6px rgba(51, 255, 102, 0.9), 0 0 14px rgba(51, 255, 102, 0.5);
 }
 
-h1, h2, h3, h4, .site-title, .post-title {
+h1, h2, h3, h4, .site-title, .post-title, .page-heading, .footer-heading {
   font-family: "VT323", "Share Tech Mono", monospace;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -102,7 +108,7 @@ h2::before { content: "// "; opacity: 0.6; }
 .site-nav .page-link:hover {
   text-shadow: 0 0 8px rgba(51, 255, 102, 0.8);
 }
-.site-nav .menu-icon > svg { fill: $term-green; }
+.site-nav .menu-icon path { fill: $term-green; }
 
 // Footer
 .site-footer {
@@ -112,6 +118,7 @@ h2::before { content: "// "; opacity: 0.6; }
   opacity: 0.8;
 }
 .site-footer a { color: $term-green-dim; }
+.social-media-list .svg-icon path { fill: $term-green-dim; }
 
 // Tables
 table {
@@ -219,10 +226,10 @@ details[open] summary::before { content: "\25bc "; }
   .boot-line { animation: none; border-right: none; }
 }
 
-// Full-viewport CRT overlays, markup injected via _includes/sub-footer.html
+// Full-viewport CRT overlays, markup injected via _layouts/default.html
 .crt-scanlines {
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   z-index: 9999;
   background-image: repeating-linear-gradient(
@@ -235,7 +242,7 @@ details[open] summary::before { content: "\25bc "; }
 }
 .crt-vignette {
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none;
   z-index: 9998;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);

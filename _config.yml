@@ -3,7 +3,4 @@ description: Things I want to publish
 theme: minima
 markdown: kramdown
 
-minima:
-  skin: auto
-  social_links:
-    github: dpt106
+github_username: dpt106
