@@ -4,4 +4,4 @@ title: About
 permalink: /about/
 ---
 
-This is my personal site and blog.
+This is where I publish things that are useful to me.
