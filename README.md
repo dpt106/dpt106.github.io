@@ -1,23 +1,24 @@
 # dpt106.github.io
 
-Personal site and blog, built with [Jekyll](https://jekyllrb.com/) and published via GitHub Pages at https://dpt106.github.io/.
+Personal site for publishing things that are useful to me, built with [Jekyll](https://jekyllrb.com/) and published via GitHub Pages at https://dpt106.github.io/.
 
-## Publishing a new post
+## Publishing a new page
 
-1. Add a file to `_posts/` named `YYYY-MM-DD-short-title.md`, e.g. `_posts/2026-08-21-my-new-post.md`:
+1. Add a `.md` file at the repo root (or a subfolder), e.g. `some-page.md`:
 
    ```markdown
    ---
-   layout: post
-   title: "My New Post"
-   date: 2026-08-21 09:00:00 -0400
+   layout: page
+   title: "Some Page"
+   permalink: /some-page/
    ---
 
-   Post content goes here, in Markdown.
+   Page content goes here, in Markdown.
    ```
 
-2. Commit on a branch, open a PR, merge it.
-3. GitHub Pages rebuilds the site automatically (no build step to run yourself) — live within a minute or two of merging.
+2. Add a link to it from `index.md`.
+3. Commit on a branch, open a PR, merge it.
+4. GitHub Pages rebuilds the site automatically (no build step to run yourself) — live within a minute or two of merging.
 
 ## Local preview (optional)
 

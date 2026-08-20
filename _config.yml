@@ -1,12 +1,7 @@
 title: dpt106
-description: Personal blog and website
+description: Things I want to publish
 theme: minima
 markdown: kramdown
-
-plugins:
-  - jekyll-feed
-
-permalink: /:year/:month/:day/:title/
 
 minima:
   skin: auto
