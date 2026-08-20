@@ -60,6 +60,13 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 <ul id="f1-stats-list"><li>Loading…</li></ul>
 
 <style>
+#f1-next-race {
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: var(--radius, 10px);
+  padding: 0.9em 1.2em;
+  margin: 1em 0 1.5em;
+  font-size: 1.05em;
+}
 #f1-upcoming-table tr.next-race {
   background-color: rgba(255, 179, 0, 0.25);
   box-shadow: inset 3px 0 0 0 #ffb300;
@@ -67,8 +74,6 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 #f1-upcoming-table tr.next-race td:first-child {
   font-weight: 700;
 }
-table { border-collapse: collapse; width: 100%; }
-th, td { padding: 0.35em 0.6em; text-align: left; }
 </style>
 
 <script>

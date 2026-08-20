@@ -1,0 +1,110 @@
+// Modern overrides for the minima theme. Loaded automatically at the end
+// of minima's stylesheet — see https://github.com/jekyll/minima#customize.
+
+:root {
+  --radius: 10px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.65;
+}
+
+.wrapper {
+  max-width: 780px;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.site-header {
+  border-top: none;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+  padding: 0.5em 0;
+}
+
+.site-title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.site-nav .page-link {
+  font-weight: 500;
+  margin-left: 1.2em;
+}
+
+a {
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+a:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.95em;
+}
+th, td {
+  padding: 0.5em 0.75em;
+  text-align: left;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+th {
+  font-weight: 600;
+  background: rgba(128, 128, 128, 0.08);
+}
+tbody tr:hover {
+  background: rgba(128, 128, 128, 0.06);
+}
+
+details {
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: var(--radius);
+  padding: 0.6em 1em;
+  margin: 1em 0;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.home-links {
+  display: grid;
+  gap: 0.75em;
+  margin-top: 1.5em;
+}
+.home-link {
+  display: block;
+  border: 1px solid rgba(128, 128, 128, 0.25);
+  border-radius: var(--radius);
+  padding: 1em 1.2em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.home-link:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.home-link-title {
+  display: block;
+  font-weight: 700;
+  font-size: 1.05em;
+}
+.home-link-desc {
+  display: block;
+  opacity: 0.7;
+  font-size: 0.9em;
+  margin-top: 0.2em;
+}
+
+.site-footer {
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+  opacity: 0.75;
+  font-size: 0.9em;
+}
