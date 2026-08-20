@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: "en" }}">
+
+  {%- include head.html -%}
+
+  <body>
+
+    {%- include header.html -%}
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        {{ content }}
+      </div>
+    </main>
+
+    {%- include footer.html -%}
+
+    <div class="crt-vignette" aria-hidden="true"></div>
+    <div class="crt-scanlines" aria-hidden="true"></div>
+    <script>
+    (function () {
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      document.body.classList.add('crt-boot');
+      window.setTimeout(function () {
+        document.body.classList.remove('crt-boot');
+      }, 700);
+    })();
+    </script>
+
+  </body>
+
+</html>
