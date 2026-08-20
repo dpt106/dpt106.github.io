@@ -35,7 +35,7 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 
 ## Standings
 
-<div id="f1-standings-error" style="display:none; color: #b00020;">Couldn't load live standings right now — try refreshing.</div>
+<div id="f1-standings-error" style="display:none;">Couldn't load live standings right now — try refreshing.</div>
 
 <div style="display: flex; gap: 2em; flex-wrap: wrap;">
 <div style="overflow-x: auto;">
@@ -61,18 +61,25 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 
 <style>
 #f1-next-race {
-  border: 1px solid rgba(128, 128, 128, 0.25);
-  border-radius: var(--radius, 10px);
+  border: 1px solid rgba(51, 255, 102, 0.4);
+  background: rgba(51, 255, 102, 0.03);
   padding: 0.9em 1.2em;
   margin: 1em 0 1.5em;
   font-size: 1.05em;
+  text-shadow: 0 0 4px rgba(51, 255, 102, 0.4);
 }
 #f1-upcoming-table tr.next-race {
-  background-color: rgba(255, 179, 0, 0.25);
+  background-color: rgba(255, 179, 0, 0.15);
   box-shadow: inset 3px 0 0 0 #ffb300;
 }
 #f1-upcoming-table tr.next-race td:first-child {
   font-weight: 700;
+  color: #ffb300;
+  text-shadow: 0 0 6px rgba(255, 179, 0, 0.6);
+}
+#f1-standings-error {
+  color: #ff5c5c;
+  text-shadow: 0 0 6px rgba(255, 60, 60, 0.5);
 }
 </style>
 

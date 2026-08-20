@@ -3,6 +3,8 @@ layout: page
 title: Dan
 ---
 
+<p class="boot-line">SYSTEM ONLINE // AWAITING INPUT</p>
+
 <div class="home-links">
   <a class="home-link" href="/f1-calendar/">
     <span class="home-link-title">F1 Dashboard</span>
