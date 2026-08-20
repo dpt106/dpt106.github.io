@@ -1,0 +1,11 @@
+<div class="crt-vignette" aria-hidden="true"></div>
+<div class="crt-scanlines" aria-hidden="true"></div>
+<script>
+(function () {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.body.classList.add('crt-boot');
+  window.setTimeout(function () {
+    document.body.classList.remove('crt-boot');
+  }, 700);
+})();
+</script>
