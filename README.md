@@ -1,5 +1,7 @@
 # dpt106.github.io
 
+[![pages-build-deployment](https://github.com/dpt106/dpt106.github.io/actions/workflows/pages/pages-build-deployment/badge.svg?branch=main)](https://github.com/dpt106/dpt106.github.io/actions/workflows/pages/pages-build-deployment)
+
 Personal site for publishing things that are useful to me, built with [Jekyll](https://jekyllrb.com/) and published via GitHub Pages at https://dpt106.github.io/.
 
 ## Publishing a new page
