@@ -121,19 +121,34 @@ h2::before { content: "// "; opacity: 0.6; }
 .social-media-list .svg-icon path { fill: $term-green-dim; }
 
 // Tables
+//
+// minima's own _base.scss styles tables with selectors as or more
+// specific than a plain `th`/`td` (e.g. `table th`, `table td`,
+// `table tr:nth-child(even)`), so a plain `th, td { color: ... }`
+// here loses the cascade even though it's declared later. Every
+// selector below matches or exceeds minima's specificity so ours
+// wins outright, rather than relying on source order.
 table {
   border-collapse: collapse;
   width: 100%;
   margin: 1em 0;
   font-size: 0.92em;
   border: 1px solid rgba(51, 255, 102, 0.3);
+  color: $term-green;
 }
-th, td {
+table tr:nth-child(even) {
+  // minima zebra-stripes even rows; keep every row the same background.
+  background-color: transparent;
+}
+table th,
+table td {
   padding: 0.5em 0.7em;
   text-align: left;
+  border: none;
   border-bottom: 1px solid rgba(51, 255, 102, 0.15);
+  color: $term-green;
 }
-th {
+table th {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 400;
@@ -141,7 +156,7 @@ th {
   background: rgba(51, 255, 102, 0.06);
   border-bottom: 1px solid rgba(51, 255, 102, 0.4);
 }
-tbody tr:hover {
+table tbody tr:hover {
   background: rgba(51, 255, 102, 0.08);
 }
 
