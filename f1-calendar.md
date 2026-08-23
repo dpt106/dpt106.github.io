@@ -11,7 +11,7 @@ Next race, calendar, and current standings — computed in your browser on every
 ## Calendar
 
 <div style="overflow-x: auto;">
-<table id="f1-upcoming-table">
+<table id="f1-upcoming-table" class="f1-table">
 <thead>
 <tr><th>#</th><th>Grand Prix</th><th>Sprint Quali</th><th>Sprint</th><th>Qualifying</th><th>Race</th></tr>
 </thead>
@@ -22,7 +22,7 @@ Next race, calendar, and current standings — computed in your browser on every
 <details style="margin-top: 0.75em;">
 <summary id="f1-past-summary">Past races</summary>
 <div style="overflow-x: auto;">
-<table id="f1-past-table">
+<table id="f1-past-table" class="f1-table">
 <thead>
 <tr><th>#</th><th>Grand Prix</th><th>Sprint Quali</th><th>Sprint</th><th>Qualifying</th><th>Race</th></tr>
 </thead>
@@ -40,7 +40,7 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 <div style="display: flex; gap: 2em; flex-wrap: wrap;">
 <div style="overflow-x: auto;">
 <h3>Drivers</h3>
-<table id="f1-driver-table">
+<table id="f1-driver-table" class="f1-table">
 <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Points</th><th>Wins</th></tr></thead>
 <tbody id="f1-driver-body"><tr><td colspan="5">Loading…</td></tr></tbody>
 </table>
@@ -48,7 +48,7 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 
 <div style="overflow-x: auto;">
 <h3>Constructors</h3>
-<table id="f1-constructor-table">
+<table id="f1-constructor-table" class="f1-table">
 <thead><tr><th>Pos</th><th>Team</th><th>Points</th><th>Wins</th></tr></thead>
 <tbody id="f1-constructor-body"><tr><td colspan="4">Loading…</td></tr></tbody>
 </table>
@@ -81,6 +81,41 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
   color: #ff5c5c;
   text-shadow: 0 0 6px rgba(255, 60, 60, 0.5);
 }
+
+/* Below this width, tables reflow into stacked cards (one per row,
+   fields labeled via data-label) instead of scrolling sideways. */
+@media (max-width: 640px) {
+  .f1-table thead { display: none; }
+  .f1-table, .f1-table tbody, .f1-table tr, .f1-table td {
+    display: block;
+    width: 100%;
+  }
+  .f1-table tr {
+    border: 1px solid rgba(51, 255, 102, 0.3);
+    margin-bottom: 0.6em;
+    padding: 0.4em 0.7em;
+  }
+  .f1-table tr.next-race {
+    border-color: #ffb300;
+  }
+  .f1-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1em;
+    padding: 0.3em 0;
+    border: none;
+  }
+  .f1-table td::before {
+    content: attr(data-label);
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #ffb300;
+    flex-shrink: 0;
+  }
+  .f1-table td[colspan]::before { content: none; }
+}
 </style>
 
 <script>
@@ -112,7 +147,13 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
   ];
 
   function rowHtml(r) {
-    return "<tr data-round=\"" + r.n + "\"><td>" + r.n + "</td><td>" + r.name + "</td><td>" + r.sq + "</td><td>" + r.sp + "</td><td>" + r.q + "</td><td>" + r.r + "</td></tr>";
+    return "<tr data-round=\"" + r.n + "\">" +
+      "<td data-label=\"#\">" + r.n + "</td>" +
+      "<td data-label=\"Grand Prix\">" + r.name + "</td>" +
+      "<td data-label=\"Sprint Quali\">" + r.sq + "</td>" +
+      "<td data-label=\"Sprint\">" + r.sp + "</td>" +
+      "<td data-label=\"Qualifying\">" + r.q + "</td>" +
+      "<td data-label=\"Race\">" + r.r + "</td></tr>";
   }
 
   var now = new Date();
@@ -145,7 +186,12 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
     .then(function (data) {
       var drivers = data.MRData.StandingsTable.StandingsLists[0].DriverStandings;
       document.getElementById("f1-driver-body").innerHTML = drivers.map(function (d) {
-        return "<tr><td>" + d.position + "</td><td>" + esc(d.Driver.givenName + " " + d.Driver.familyName) + "</td><td>" + esc(d.Constructors[0].name) + "</td><td>" + d.points + "</td><td>" + d.wins + "</td></tr>";
+        return "<tr>" +
+          "<td data-label=\"Pos\">" + d.position + "</td>" +
+          "<td data-label=\"Driver\">" + esc(d.Driver.givenName + " " + d.Driver.familyName) + "</td>" +
+          "<td data-label=\"Team\">" + esc(d.Constructors[0].name) + "</td>" +
+          "<td data-label=\"Points\">" + d.points + "</td>" +
+          "<td data-label=\"Wins\">" + d.wins + "</td></tr>";
       }).join("");
 
       return fetch("https://api.jolpi.ca/ergast/f1/current/constructorstandings/")
@@ -153,7 +199,11 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
         .then(function (cdata) {
           var constructors = cdata.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
           document.getElementById("f1-constructor-body").innerHTML = constructors.map(function (c) {
-            return "<tr><td>" + c.position + "</td><td>" + esc(c.Constructor.name) + "</td><td>" + c.points + "</td><td>" + c.wins + "</td></tr>";
+            return "<tr>" +
+              "<td data-label=\"Pos\">" + c.position + "</td>" +
+              "<td data-label=\"Team\">" + esc(c.Constructor.name) + "</td>" +
+              "<td data-label=\"Points\">" + c.points + "</td>" +
+              "<td data-label=\"Wins\">" + c.wins + "</td></tr>";
           }).join("");
 
           var stats = [];
