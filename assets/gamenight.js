@@ -205,6 +205,22 @@
       choices: [
         { label: 'Send nothing. Hold your breath.', p: 25, v: 8, msg: "Even Tom stays quiet. The world holds its breath for a full minute." }
       ] },
+    { id: 'tomback', who: ['tom'],
+      title: 'Tom is back',
+      text: "Tom has been gone for three weeks. No messages, no explanation. He returns with a tan, a new watch and a calm you don't trust. 'It was a retreat,' he says.",
+      choices: [
+        { label: 'Ask where he really was', p: 0, v: -4, msg: "'A retreat.' He says it twice, straight-faced. The watch is from a shop in Geneva." },
+        { label: "Don't ask", p: 2, v: 4, easy: 1, msg: "You don't ask. This is mostly why you're still friends." },
+        { label: 'Ask about the watch', p: 2, v: 2, msg: "'A gift.' He doesn't say from whom. He is already looking at a tree." }
+      ] },
+    { id: 'tomgone', who: ['tom'],
+      title: 'Tom has gone quiet',
+      text: "Mid-conversation, Tom stops replying. His status says 'last seen 4 minutes ago', then 'last seen 4 minutes ago' again, for twenty minutes. This has happened before. It lasted three weeks.",
+      choices: [
+        { label: 'Wait. He always comes back', p: 2, v: 0, t: 15, easy: 1, msg: "He comes back with 'sorry, signal'. There was no signal for the whole of Tuesday." },
+        { label: "Message: 'you ok?'", p: 0, v: 3, msg: "'Fine. Away.' Tom does not say from what, or to where." },
+        { label: 'Check the news for a heist', p: 4, v: 4, msg: "Nothing today. The headlines are still, technically, tomorrow's." }
+      ] },
     { id: 'solo', who: ['tom'],
       title: "Tom wants to start without Mork",
       text: "'He knows the deal.' Tom has already queued the boss. He has already named the party after himself.",
@@ -212,6 +228,15 @@
         { label: 'Calm Tom', p: 2, v: 4, msg: "You talk him down with nothing. The nothing works." },
         { label: 'Let him queue', p: -6, v: -10, msg: "He queues. He waits. He writes a 'for the record' message nobody asked for." }
       ] }
+  ];
+
+  // Tom disappears for weeks at a time and has never explained where
+  var TOM_RUMOURS = [
+    'Rumour: Tom spent the last three weeks on a silent retreat. Nobody can confirm it; Tom is not silent.',
+    "Rumour: Tom was in Lisbon, for work he won't name, with a tan he won't explain.",
+    "Tom mentions 'the Geneva thing' and immediately changes the subject.",
+    "Tom says a relative of his is wanted by Interpol. 'Different Tom,' he adds, unprompted.",
+    "Tom's last known location was 'somewhere warm'. He says it like a password."
   ];
 
   // ---------- state ----------
@@ -304,7 +329,7 @@
   });
 
   function setStatus() {
-    var tomText = g && g.ending ? (g.ending === 'rage' ? 'STARTED WITHOUT YOU' : 'CHOPPING') : 'ONLINE SINCE 2PM';
+    var tomText = g && g.ending ? (g.ending === 'rage' ? 'STARTED WITHOUT YOU' : 'CHOPPING') : 'BACK FROM A "RETREAT"';
     couchEls.don.querySelector('small').textContent = 'ON THE SOFA';
     couchEls.tom.querySelector('small').textContent = tomText;
     couchEls.mork.querySelector('small').textContent = morkStatus();
@@ -340,7 +365,7 @@
     var found = endingsFound().length;
     elCard.innerHTML =
       '<h2>IS MORK COMING?</h2>' +
-      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom has been online since two. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no kids, no work. The only hard part is getting him there. You are Don. You are, famously, easy.</p>" +
+      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom has been online since two, his first appearance in three weeks, and won't say where he's been. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no kids, no work. The only hard part is getting him there. You are Don. You are, famously, easy.</p>" +
       '<div class="gn-choices">' +
         '<button class="gn-btn" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
         '<button class="gn-btn" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
@@ -406,6 +431,7 @@
       st.steals === 0 ? 'Tom stole nothing. <b>Suspicious.</b>'
         : st.steals < 3 ? "Tom 'borrowed' <b>" + st.steals + '</b> thing' + (st.steals === 1 ? '' : 's') + ' of Mork\'s'
         : 'Tom now owns most of Mork\'s stuff: <b>' + st.steals + '</b> items',
+      "Where Tom has been for three weeks: <b>unconfirmed</b> (retreat, or heist)",
       st.maybes === 0 ? "Mork never said 'maybe'. <b>He knew.</b>" : "Mork said 'maybe' <b>" + st.maybes + '</b> time' + (st.maybes === 1 ? '' : 's'),
       st.easy === 0 ? 'Don made decisions. <b>Out of character.</b>' : "Don said 'I'm easy' (or meant it) <b>" + st.easy + '</b> time' + (st.easy === 1 ? '' : 's')
     ];
@@ -433,7 +459,9 @@
     g.stats.lostMin += o.t || 0;
     var trees = 1 + Math.floor(Math.random() * 4);
     g.stats.trees += trees;
-    return { p: p, v: v, d: o.d || 0, mins: mins, msg: o.msg, trees: 'Meanwhile, Tom fells ' + trees + ' tree' + (trees === 1 ? '' : 's') + ' in the lobby.' };
+    var aside = 'Meanwhile, Tom fells ' + trees + ' tree' + (trees === 1 ? '' : 's') + ' in the lobby.';
+    if (Math.random() < 0.2) aside = TOM_RUMOURS[Math.floor(Math.random() * TOM_RUMOURS.length)];
+    return { p: p, v: v, d: o.d || 0, mins: mins, msg: o.msg, trees: aside };
   }
 
   function resolve(outcome) {
