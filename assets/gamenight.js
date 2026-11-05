@@ -114,7 +114,7 @@
         { label: "Tell him we'll hold his seat", p: 6, v: 3, msg: "It's a small thing. He feels it more than he lets on." }
       ] },
     { id: 'dinner', who: ['mork'],
-      title: "Mork is doing the kids' dinner",
+      title: "Mork is doing his kid's dinner",
       text: 'He sends one photo of a plate of chicken dippers. No caption. It is a cry for help.',
       choices: [
         { label: 'Suggest takeaway', p: 8, v: -2, msg: "'Great shout.' He orders in under a minute. The man is a machine." },
@@ -122,9 +122,9 @@
       ] },
     { id: 'bedtime', who: ['mork', 'tom'],
       title: 'Bedtime stories',
-      text: "Mork's youngest wants 'one more'. Mork has read this book six times this week.",
+      text: "Mork's kid wants 'one more'. Mork has read this book six times this week.",
       choices: [
-        { label: 'Tom offers to read it over a call', p: 4, v: 8, msg: "Tom is wonderful at it. The kids ask for him back. He asks them to 'remember his name'. For later." },
+        { label: 'Tom offers to read it over a call', p: 4, v: 8, msg: "Tom is wonderful at it. Mork's kid asks for him back. He asks the kid to 'remember his name'. For later." },
         { label: 'Tell him to read the short one', p: 8, v: -3, t: 15, msg: "'There's no short one, Don.' There's a short one." }
       ] },
     { id: 'partner', who: ['mork'],
@@ -191,12 +191,12 @@
       title: "Order Mork a pizza",
       text: "You can order a pizza straight to Mork's door. It is not strictly allowed. It is not strictly forbidden.",
       choices: [
-        { label: 'Order it', p: 8, v: 8, msg: 'His kids love you for roughly ten minutes. Mork loves you for longer.' },
+        { label: 'Order it', p: 8, v: 8, msg: 'His kid loves you for roughly ten minutes. Mork loves you for longer.' },
         { label: 'Pizza for the whole chat', p: 4, v: 12, t: 15, msg: 'Three pizzas, three doors. A sacred moment of coordination.' }
       ] },
     { id: 'kidsasleep', who: ['mork'], lucky: true,
-      title: 'The kids are asleep',
-      text: "A miracle: both kids are asleep before 7. Mork sends a single message: 'Do not speak to me. I am on my way.'",
+      title: 'The kid is asleep',
+      text: "A miracle: his kid is asleep before 7. Mork sends a single message: 'Do not speak to me. I am on my way.'",
       choices: [
         { label: 'Send nothing. Hold your breath.', p: 25, v: 8, msg: 'Even Tom stays quiet. The world holds its breath for a full minute.' }
       ] },
@@ -353,7 +353,7 @@
     var found = endingsFound().length;
     elCard.innerHTML =
       '<h2>WHERE\'S MORK?</h2>' +
-      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom has been online since two, his first appearance in three weeks. He is one of the nicest men alive, and there is a non-zero chance he is robbing you. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no kids, no work. The only hard part is getting him there. You are Don. You are, famously, easy.</p>" +
+      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom has been online since two, his first appearance in three weeks. He is one of the nicest men alive, and there is a non-zero chance he is robbing you. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no interruptions, no work. The only hard part is getting him there. You are Don. You are, famously, easy.</p>" +
       '<div class="gn-choices">' +
         '<button class="gn-btn" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
         '<button class="gn-btn" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
