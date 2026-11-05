@@ -322,9 +322,8 @@
 
   root.innerHTML =
     '<div class="bk">' +
-      '<p class="bk-sub">An idle game about bread and mild despair. Click the loaf. Hire things. Let it get out of hand.</p>' +
       '<div class="bk-ticker" role="status" aria-live="polite" id="bk-ticker"></div>' +
-      '<div class="bk-grid">' +
+      '<div class="bk-main">' +
         '<section class="bk-panel bk-stage" id="bk-stage" aria-label="Bakery">' +
           '<div class="bk-count-label">LOAVES BAKED</div>' +
           '<div class="bk-count" id="bk-count">0</div>' +
@@ -332,35 +331,42 @@
           '<button class="bk-loaf" id="bk-loaf" aria-label="Bake a loaf">' + sprite(LOAF, 12) + '</button>' +
           '<div class="bk-buffs" id="bk-buffs"></div>' +
         '</section>' +
-        '<section class="bk-panel" aria-label="Staff and equipment">' +
-          '<h3>STAFF &amp; EQUIPMENT</h3>' +
-          '<div class="bk-modes" role="group" aria-label="Buy amount">' +
-            '<button class="bk-btn" data-mode="1" aria-pressed="true">x1</button>' +
-            '<button class="bk-btn" data-mode="10" aria-pressed="false">x10</button>' +
-            '<button class="bk-btn" data-mode="max" aria-pressed="false">MAX</button>' +
+        '<section class="bk-panel bk-side">' +
+          '<div class="bk-tabs" role="tablist">' +
+            '<button class="bk-tab" role="tab" data-tab="staff" aria-selected="true">STAFF</button>' +
+            '<button class="bk-tab" role="tab" data-tab="ups" aria-selected="false" id="bk-tab-ups">UPGRADES</button>' +
+            '<button class="bk-tab" role="tab" data-tab="branch" aria-selected="false">BRANCH</button>' +
+            '<button class="bk-tab" role="tab" data-tab="log" aria-selected="false">LOG</button>' +
           '</div>' +
-          '<ul class="bk-list" id="bk-list"></ul>' +
+          '<div class="bk-pane" data-pane="staff" role="tabpanel">' +
+            '<div class="bk-modes" role="group" aria-label="Buy amount">' +
+              '<button class="bk-btn" data-mode="1" aria-pressed="true">x1</button>' +
+              '<button class="bk-btn" data-mode="10" aria-pressed="false">x10</button>' +
+              '<button class="bk-btn" data-mode="max" aria-pressed="false">MAX</button>' +
+            '</div>' +
+            '<ul class="bk-list" id="bk-list"></ul>' +
+          '</div>' +
+          '<div class="bk-pane" data-pane="ups" role="tabpanel" hidden>' +
+            '<div class="bk-upgrades" id="bk-ups"></div>' +
+          '</div>' +
+          '<div class="bk-pane bk-prestige" data-pane="branch" role="tabpanel" hidden>' +
+            '<p id="bk-pinfo"></p>' +
+            '<button class="bk-btn bk-go" id="bk-pbtn">OPEN A NEW BRANCH</button>' +
+          '</div>' +
+          '<div class="bk-pane" data-pane="log" role="tabpanel" hidden>' +
+            '<ul class="bk-feed" id="bk-feed"></ul>' +
+            '<div class="bk-foot">' +
+              '<div class="bk-stats" id="bk-stats"></div>' +
+              '<button class="bk-btn" id="bk-save">SAVE</button>' +
+              '<button class="bk-btn" id="bk-reset">RESET</button>' +
+            '</div>' +
+          '</div>' +
         '</section>' +
-        '<section class="bk-panel bk-wide" aria-label="Upgrades">' +
-          '<h3>UPGRADES</h3>' +
-          '<div class="bk-upgrades" id="bk-ups"></div>' +
-        '</section>' +
-        '<section class="bk-panel bk-wide bk-prestige" aria-label="New branch">' +
-          '<h3>NEW BRANCH</h3>' +
-          '<p id="bk-pinfo"></p>' +
-          '<button class="bk-btn bk-go" id="bk-pbtn">OPEN A NEW BRANCH</button>' +
-        '</section>' +
-        '<section class="bk-panel bk-wide" aria-label="Bread log">' +
-          '<h3>BREAD LOG</h3>' +
-          '<ul class="bk-feed" id="bk-feed"></ul>' +
-        '</section>' +
-      '</div>' +
-      '<div class="bk-foot">' +
-        '<div class="bk-stats" id="bk-stats"></div>' +
-        '<button class="bk-btn" id="bk-save">SAVE</button>' +
-        '<button class="bk-btn" id="bk-reset">RESET</button>' +
       '</div>' +
     '</div>';
+
+  // the game fits the viewport; page chrome shrinks around it (see bakery.css)
+  document.body.classList.add('bk-page');
 
   function $(id) { return document.getElementById(id); }
   var elTicker = $('bk-ticker'), elCount = $('bk-count'), elCps = $('bk-cps'), elCpc = $('bk-cpc');
@@ -390,6 +396,19 @@
       });
       refresh(false);
     });
+  });
+
+  var elTabUps = $('bk-tab-ups');
+  function showTab(name) {
+    Array.prototype.forEach.call(root.querySelectorAll('.bk-tab'), function (t) {
+      t.setAttribute('aria-selected', t.getAttribute('data-tab') === name ? 'true' : 'false');
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('.bk-pane'), function (p) {
+      p.hidden = p.getAttribute('data-pane') !== name;
+    });
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('.bk-tab'), function (t) {
+    t.addEventListener('click', function () { showTab(t.getAttribute('data-tab')); });
   });
 
   // ---------- ticker, log, floaters ----------
@@ -601,6 +620,8 @@
       btn.classList.toggle('can', !!can);
       btn.classList.toggle('cant', !can);
     });
+    var canCount = elUps.querySelectorAll('.bk-up.can').length;
+    elTabUps.textContent = canCount ? 'UPGRADES (' + canCount + ')' : 'UPGRADES';
 
     // buffs
     var bh = '';
