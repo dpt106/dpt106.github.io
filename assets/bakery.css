@@ -228,6 +228,7 @@ body.bk-page {
   height: 100dvh;
   overflow: hidden;
 }
+.bk-page .site-header { display: none; }
 .bk-page .site-footer,
 .bk-page .post-header {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
@@ -297,3 +298,4 @@ body.bk-page {
   .bk-page .page-content { padding: 4px 0; }
   .bk-desc { display: none; }
 }
+

@@ -107,9 +107,10 @@
 
 /* fit the viewport (same approach as the bakery page) */
 body.gn-page { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
-.gn-page .site-footer { display: none; }
+.gn-page .site-footer, .gn-page .site-header { display: none; }
 .gn-page .post-header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .gn-page .page-content { flex: 1; min-height: 0; padding: 8px 0; }
+.gn-page .page-content > .wrapper { padding-left: 8px; padding-right: 8px; }
 .gn-page .page-content > .wrapper { height: 100%; max-width: 760px; }
 .gn-page article.post, .gn-page .post-content { height: 100%; }
 .gn-page .post-content { margin: 0; }

@@ -15,7 +15,7 @@ title: Dan
     <span class="home-link-desc">An idle game about bread and mild despair</span>
   </a>
   <a class="home-link" href="/game-night/">
-    <span class="home-link-title">Is Mork Coming?</span>
+    <span class="home-link-title">Where's Mork?</span>
     <span class="home-link-desc">Two hours to get your busiest friend online</span>
   </a>
   <a class="home-link" href="/about/">
