@@ -10,6 +10,10 @@ title: Dan
     <span class="home-link-title">F1 Dashboard</span>
     <span class="home-link-desc">Next race, calendar, live standings</span>
   </a>
+  <a class="home-link" href="/bakery/">
+    <span class="home-link-title">Tiny Bakery</span>
+    <span class="home-link-desc">An idle game about bread and mild despair</span>
+  </a>
   <a class="home-link" href="/about/">
     <span class="home-link-title">About</span>
     <span class="home-link-desc">A little about this site</span>
