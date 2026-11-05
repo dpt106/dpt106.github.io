@@ -115,13 +115,46 @@ body.gn-page { display: flex; flex-direction: column; height: 100vh; height: 100
 .gn-page .post-content { margin: 0; }
 .gn-page #gamenight { height: 100%; }
 
-@media (max-width: 560px) {
-  .gn { padding: 6px; gap: 6px; }
-  .gn-card { max-height: 52%; padding: 10px; }
-}
-@media (max-height: 600px) {
+/* Compact layout for phones and short windows.
+   The "TV" shrinks to what it needs (no big phone sprite, smaller characters)
+   and the event card takes all the remaining height, scrolling inside itself
+   if a long event needs it, so the page itself never scrolls. */
+@media (max-width: 640px), (max-height: 720px) {
   .gn-page .page-content { padding: 4px 0; }
-  .gn-card p { font-size: 14px; margin-bottom: 6px; }
+  .gn-page .page-content > .wrapper { padding-left: 6px; padding-right: 6px; }
+  .gn { padding: 6px; gap: 6px; }
+  .gn-top { flex-wrap: nowrap; gap: 8px; }
+  .gn-clock { font-size: 9px; }
+  .gn-clock small { margin-top: 3px; font-size: 7px; }
+  .gn-meter { font-size: 8px; gap: 6px; }
+  .gn-bar { width: clamp(70px, 26vw, 150px); height: 12px; }
+
+  .gn-tv { flex: 0 0 auto; padding: 6px; gap: 6px; justify-content: center; }
+  .gn-boss { flex-direction: row; }
+  .gn-boss .gn-sprite { display: none; }
+  .gn-couch { gap: clamp(6px, 3vw, 24px); }
+  .gn-char .gn-sprite { width: clamp(32px, 8vh, 54px); }
+  .gn-char { font-size: 7px; gap: 2px; }
+  .gn-char small { font-size: 5px; max-width: 11em; }
+
+  .gn-card { flex: 1 1 0; min-height: 0; max-height: none; padding: 10px; }
+  .gn-card h2 { font-size: 10px; margin-bottom: 6px; }
+  .gn-card p { font-size: 14px; margin-bottom: 8px; }
+  .gn-choices { gap: 6px; }
+  .gn-btn { padding: 8px 10px; font-size: 14px; }
+  .gn-btn small { font-size: 11px; }
+  .gn-btn.gn-go { font-size: 9px; }
+  .gn-stats { font-size: 13px; gap: 4px 10px; }
+  .gn-timber .gn-btn { padding: 12px 20px; font-size: 14px; }
+}
+
+/* Landscape phones: characters on the left, event card on the right. */
+@media (max-height: 480px) and (min-width: 560px) {
+  .gn { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); grid-template-rows: auto minmax(0, 1fr); gap: 6px 8px; }
+  .gn-top { grid-column: 1 / -1; }
+  .gn-tv { flex: none; align-self: stretch; flex-direction: column; justify-content: center; }
+  .gn-card { align-self: stretch; }
+  .gn-char .gn-sprite { width: clamp(28px, 11vh, 44px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .gn-char.active .gn-sprite, .gn-char.ring .gn-sprite { animation: none; }
