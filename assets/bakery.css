@@ -16,8 +16,9 @@
 
   background: var(--bk-bg);
   color: var(--bk-text);
-  padding: 16px;
-  margin: 1em 0;
+  padding: 10px;
+  margin: 0;
+  box-sizing: border-box;
   border: 4px solid var(--bk-edge);
   box-shadow: 4px 4px 0 var(--bk-edge);
   font-size: 15px;
@@ -39,27 +40,17 @@
 .bk button { font: inherit; color: inherit; cursor: pointer; }
 .bk button:focus-visible { outline: 3px solid var(--bk-gold); outline-offset: 2px; }
 
-.bk-sub { margin: 0 0 12px; color: var(--bk-dim); }
 
 .bk-ticker {
   background: var(--bk-edge);
   border: 2px solid var(--bk-panel-hi);
   padding: 10px 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   min-height: 3.2em;
+  flex: none;
   color: var(--bk-text);
 }
 .bk-ticker::before { content: "> "; color: var(--bk-gold); }
-
-.bk-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-}
-@media (min-width: 700px) {
-  .bk-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-  .bk-wide { grid-column: 1 / -1; }
-}
 
 .bk-panel {
   background: var(--bk-panel);
@@ -72,7 +63,6 @@
 .bk-stage {
   position: relative;
   overflow: hidden;
-  min-height: 380px;
   text-align: center;
 }
 .bk-count {
@@ -222,4 +212,86 @@
 @media (prefers-reduced-motion: reduce) {
   .bk-event { animation: none; }
   .bk-float { animation-duration: 0.01s; }
+}
+
+/* ---------- fit-to-viewport layout ----------
+   The page never scrolls: the game fills what's left under the site header,
+   the stage and the tabbed side panel share it, and only the active tab's
+   content scrolls inside its own box. */
+
+body.bk-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+.bk-page .site-footer,
+.bk-page .post-header {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
+}
+.bk-page .site-footer { display: none; }
+.bk-page .page-content { flex: 1; min-height: 0; padding: 8px 0; }
+.bk-page .page-content > .wrapper { height: 100%; max-width: 1100px; }
+.bk-page article.post,
+.bk-page .post-content { height: 100%; }
+.bk-page .post-content { margin: 0; }
+.bk-page #bakery { height: 100%; }
+
+.bk { height: 100%; display: flex; flex-direction: column; }
+.bk-main {
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 10px;
+}
+.bk-panel { min-height: 0; min-width: 0; box-sizing: border-box; }
+
+.bk-stage {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 10px;
+}
+.bk-count { font-size: clamp(11px, 2.4vh, 18px); }
+.bk-loaf { flex: 0 1 auto; min-height: 0; }
+.bk-loaf .bk-sprite {
+  width: clamp(72px, min(26vh, 30vw), 192px);
+  height: auto;
+}
+.bk-rates { margin: 4px 0 6px; }
+
+.bk-side { display: flex; flex-direction: column; padding: 10px; }
+.bk-tabs { display: flex; gap: 6px; flex: none; margin-bottom: 10px; flex-wrap: wrap; }
+.bk-tab {
+  font-family: var(--bk-pixel);
+  font-size: 9px;
+  background: var(--bk-bg);
+  border: 2px solid var(--bk-edge);
+  padding: 8px 9px;
+  color: var(--bk-dim);
+}
+.bk-tab[aria-selected="true"] { background: var(--bk-gold); color: var(--bk-edge); }
+.bk-pane { flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.bk-pane[hidden] { display: none; }
+.bk-modes { position: sticky; top: 0; background: var(--bk-panel); padding-bottom: 8px; margin-bottom: 4px; z-index: 1; }
+.bk-upgrades { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.bk-foot { margin-top: 12px; }
+
+/* Narrow screens: stage becomes a compact strip above the tabbed panel */
+@media (max-width: 700px) {
+  .bk { padding: 6px; }
+  .bk-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 8px; }
+  .bk-stage { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; padding: 8px; }
+  .bk-count-label, .bk-rates, .bk-count { flex: 1 1 100%; margin: 0; }
+  .bk-count-label { font-size: 12px; }
+  .bk-loaf .bk-sprite { width: clamp(56px, 14vh, 110px); }
+  .bk-buffs { flex: 1 1 100%; min-height: 0; margin: 0; }
+  .bk-ticker { min-height: 0; padding: 6px 8px; font-size: 13px; margin-bottom: 6px; }
+  .bk-row { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; }
+  .bk-icon { width: 32px; height: 32px; }
+  .bk-buy { min-width: 92px; }
+}
+@media (max-height: 560px) {
+  .bk-ticker { min-height: 0; padding: 4px 8px; font-size: 13px; }
+  .bk-page .page-content { padding: 4px 0; }
+  .bk-desc { display: none; }
 }
