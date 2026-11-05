@@ -578,9 +578,10 @@
 
     for (var i = 0; i < BUILDINGS.length; i++) {
       var b = BUILDINGS[i], r = rows[i];
+      // always refresh the row's contents, even when it's hidden, so a
+      // prestige reset never leaves stale counts behind
       var seen = i === 0 || owned(i) > 0 || s.runTotal >= b.cost * 0.5;
       r.li.hidden = !seen;
-      if (!seen) continue;
       var n = buyAmount(b), cost = costFor(b, n);
       r.owned.textContent = owned(i) ? 'x' + owned(i) : '';
       r.each.textContent = 'Each bakes ' + fmt(b.cps * buildingMult(i) * globalMult(), true) + '/s';
