@@ -61,25 +61,23 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
 
 <style>
 #f1-next-race {
-  border: 1px solid rgba(51, 255, 102, 0.4);
-  background: rgba(51, 255, 102, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
   padding: 0.9em 1.2em;
   margin: 1em 0 1.5em;
   font-size: 1.05em;
-  text-shadow: 0 0 4px rgba(51, 255, 102, 0.4);
 }
 #f1-upcoming-table tr.next-race {
-  background-color: rgba(255, 179, 0, 0.15);
-  box-shadow: inset 3px 0 0 0 #ffb300;
+  background-color: var(--accent-bg);
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 #f1-upcoming-table tr.next-race td:first-child {
   font-weight: 700;
-  color: #ffb300;
-  text-shadow: 0 0 6px rgba(255, 179, 0, 0.6);
+  color: var(--accent);
 }
 #f1-standings-error {
-  color: #ff5c5c;
-  text-shadow: 0 0 6px rgba(255, 60, 60, 0.5);
+  color: var(--error);
 }
 
 /* Below this width, tables reflow into stacked cards (one per row,
@@ -91,12 +89,13 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
     width: 100%;
   }
   .f1-table tr {
-    border: 1px solid rgba(51, 255, 102, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     margin-bottom: 0.6em;
     padding: 0.4em 0.7em;
   }
   .f1-table tr.next-race {
-    border-color: #ffb300;
+    border-color: var(--accent);
   }
   .f1-table td {
     display: flex;
@@ -111,7 +110,7 @@ Round 16 (Bahrain, relocated to Sepang, Malaysia) is a newer change and less cer
     font-size: 0.8em;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: #ffb300;
+    color: var(--muted);
     flex-shrink: 0;
   }
   .f1-table td[colspan]::before { content: none; }
