@@ -333,7 +333,7 @@
         '</section>' +
         '<section class="bk-panel bk-side">' +
           '<div class="bk-tabs" role="tablist">' +
-            '<button class="bk-tab" role="tab" data-tab="staff" aria-selected="true">STAFF</button>' +
+            '<button class="bk-tab" role="tab" data-tab="staff" aria-selected="true">PRODUCTION</button>' +
             '<button class="bk-tab" role="tab" data-tab="ups" aria-selected="false" id="bk-tab-ups">UPGRADES</button>' +
             '<button class="bk-tab" role="tab" data-tab="branch" aria-selected="false">BRANCH</button>' +
             '<button class="bk-tab" role="tab" data-tab="log" aria-selected="false">LOG</button>' +
