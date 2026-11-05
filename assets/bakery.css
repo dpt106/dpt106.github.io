@@ -158,6 +158,8 @@
   border: 2px solid var(--bk-edge);
   padding: 8px;
 }
+/* display:grid above would otherwise override the hidden attribute */
+.bk-row[hidden] { display: none; }
 .bk-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bk-panel-hi); }
 .bk-name { font-weight: bold; }
 .bk-owned { font-family: var(--bk-pixel); font-size: 10px; color: var(--bk-gold); margin-left: 6px; }
