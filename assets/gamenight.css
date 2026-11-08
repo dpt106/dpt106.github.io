@@ -147,6 +147,28 @@
 .gn-msg-mork { background: #2c3a4a; } .gn-msg-mork b { color: var(--gn-cyan); }
 .gn-msg-don { align-self: flex-end; background: #2b3a8f; } .gn-msg-don b { color: var(--gn-gold); }
 .gn-msg-sys { align-self: center; max-width: 100%; background: none; border: 0; padding: 0; font-size: 12px; color: var(--gn-dim); text-align: center; font-style: italic; }
+.gn-msg-mum { background: #3a2f4a; } .gn-msg-mum b { color: #d9a8ff; }
+.gn-typing span { display: inline-flex; gap: 4px; align-items: center; height: 1.2em; }
+.gn-typing i { width: 6px; height: 6px; background: var(--gn-dim); animation: gn-dot 0.9s steps(2) infinite; }
+.gn-typing i:nth-child(2) { animation-delay: 0.15s; } .gn-typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes gn-dot { 50% { opacity: 0.2; } }
+.gn-after.pending { visibility: hidden; }
+
+.gn-snd { background: none; border: 2px solid #2b3470; color: var(--gn-dim); font-family: var(--gn-pixel); font-size: 7px; padding: 5px 6px; line-height: 1.4; }
+.gn-snd[aria-pressed="true"] { color: var(--gn-green); border-color: var(--gn-green); }
+.gn .gn-tally { display: block; min-height: 1.4em; font: normal 7px/1.4 var(--gn-pixel); color: var(--gn-dim); }
+.gn .gn-tally.hot { color: var(--gn-red); }
+
+.gn-btn.gn-locked { opacity: 0.45; cursor: not-allowed; text-align: left; }
+.gn-btn.gn-alt { background: #6a4fa8; }
+.gn-badges { margin: 10px 0 0; color: var(--gn-dim); font-size: 13px; }
+.gn-badges summary { cursor: pointer; font-family: var(--gn-pixel); font-size: 8px; color: var(--gn-cyan); }
+.gn-badges ul { margin: 8px 0 0; padding-left: 18px; }
+.gn-badges li.got b { color: var(--gn-gold); font-weight: normal; }
+.gn-score { font-family: var(--gn-pixel); font-size: 10px; color: var(--gn-dim); }
+.gn-score b { color: var(--gn-text); font-weight: normal; font-size: 14px; }
+.gn-new { color: var(--gn-gold); }
+
 .gn-nar { color: var(--gn-dim); font-style: italic; }
 .gn-aside { color: var(--gn-dim); font-size: 12px; opacity: 0.8; }
 .gn-note { color: var(--gn-gold); font-size: 14px; }
@@ -222,6 +244,8 @@ body.gn-page { display: flex; flex-direction: column; height: 100vh; height: 100
   .gn-msg { font-size: 13px; padding: 4px 8px; }
   .gn-chat { gap: 4px; margin-bottom: 8px; }
   .gn-hint { display: none; }
+  .gn .gn-tally { font-size: 6px; }
+  .gn-snd { font-size: 6px; padding: 4px; }
   .gn-lung { width: 104px; height: 104px; }
   .gn-arena { height: 60px; }
   .gn button.gn-slot { min-height: 32px; }
@@ -236,7 +260,7 @@ body.gn-page { display: flex; flex-direction: column; height: 100vh; height: 100
   .gn-char .gn-sprite { width: clamp(28px, 11vh, 44px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gn-char.active .gn-sprite, .gn-char.ring .gn-sprite, .gn-char.poked .gn-sprite, .gn-hint, .gn-float { animation: none; }
+  .gn-char.active .gn-sprite, .gn-char.ring .gn-sprite, .gn-char.poked .gn-sprite, .gn-hint, .gn-float, .gn-typing i { animation: none; }
   .gn-bar i { transition: none; }
 }
 
