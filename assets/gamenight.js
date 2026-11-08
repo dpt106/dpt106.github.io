@@ -15,15 +15,50 @@
   var ROUND_MIN = 15;           // each round costs 15 minutes
   var BASE_READY = 2;           // Mork drifts towards free a little each round
   var BASE_VIBES = -2;          // and the mood drifts down a bit
-  var WIN_READY = 65;           // readiness needed at kick-off for Mork to be on time
-  var LATE_READY = 40;          // enough to turn up late and fall asleep on the controller
+  var WIN_READY = 52;           // readiness needed at kick-off for Mork to be on time
+  var LATE_READY = 30;          // enough to turn up late and fall asleep on the controller
   var ENDINGS_KEY = 'is-mork-coming-endings';
   var ENDING_COUNT = 5;
 
   var DAYS = {
     sunday: { name: 'Sunday', next: 'Wednesday', blurb: 'Family dinner, then baths. Mork is a hostage until 7.', workWeight: 1 },
-    wednesday: { name: 'Wednesday', next: 'Sunday', blurb: 'Work is overrunning. Mork is a hostage until it stops.', workWeight: 2 }
+    wednesday: { name: 'Wednesday', next: 'Sunday', blurb: 'Work is overrunning. Mork is a hostage until it stops.', workWeight: 2 },
+    birthday: { name: "Tom's birthday", next: 'Sunday', blurb: 'Tom has been waiting for this since his last birthday. Everything is about Tom.', workWeight: 1, special: true, tomBoost: 2.5, vibes: 15, hint: 'Get Mork online once' },
+    launch: { name: 'Launch night', next: 'Wednesday', blurb: "Tom's game goes live tonight. Tom is calm in the way a kettle is calm.", workWeight: 1, special: true, tomBoost: 2, vibes: 5, hint: 'Find 3 endings' }
   };
+  var DAY_ORDER = ['sunday', 'wednesday', 'birthday', 'launch'];
+
+  // a random wrinkle for every night: nudges the starting numbers and event odds
+  var COMPS = [
+    { name: 'A quiet night', blurb: 'Nothing is wrong. Be suspicious.', ready: 4, vibes: 6, boost: {} },
+    { name: 'The kid has a cold', blurb: "Mork is on tissue duty, and it's all anyone wants to talk about.", ready: -4, boost: { bedtime: 3, dinner: 2, kidsasleep: 0.3 } },
+    { name: "Tom hasn't slept", blurb: 'Tom has been awake since Monday. He has plans.', boost: { calm: 3, sermon: 3, tomgame: 3, stream: 2 } },
+    { name: 'Tom feels generous', blurb: 'Everything is a gift. Count the gifts.', boost: { generous: 4, steal: 3, inventory: 3, tomloan: 3 } },
+    { name: "Don's wifi is a rumour", blurb: 'Your connection is held together by hope.', boost: { update: 6 } },
+    { name: 'Mork has a deadline', blurb: "A report is due. Mork will say 'one hour'.", ready: -6, boost: { work: 3, boss: 3, voicenote: 3 } },
+    { name: 'Tom is back from "away"', blurb: 'Three weeks gone, and he is feeling chatty.', boost: { tomback: 6, tomgone: 3, tommum: 4, tomalibi: 4 } }
+  ];
+
+  var BADGES = [
+    { id: 'in', name: 'He Came', desc: 'Get Mork online on time.', test: function (g) { return g.ending === 'win'; } },
+    { id: 'late', name: 'Better Late', desc: 'Mork shows up, then falls asleep.', test: function (g) { return g.ending === 'late'; } },
+    { id: 'ghost', name: 'Seen at 11:48', desc: 'No Mork at all.', test: function (g) { return g.ending === 'noshow'; } },
+    { id: 'heist', name: 'A Very Good Retreat', desc: 'Let Tom leave the party with your things.', test: function (g) { return g.ending === 'heist'; } },
+    { id: 'rage', name: 'Too Excited', desc: 'Tom can no longer wait.', test: function (g) { return g.ending === 'rage'; } },
+    { id: 'mini3', name: 'Mini-Game Menace', desc: 'Win three mini-games in one night.', test: function (g) { return g.stats.miniWon >= 3; } },
+    { id: 'easy3', name: 'Chief Easy Officer', desc: "Be 'easy' about three things in one night.", test: function (g) { return g.stats.easy >= 3; } },
+    { id: 'forest', name: 'Forest Management', desc: 'Tom fells 25 trees in a night.', test: function (g) { return g.stats.trees >= 25; } },
+    { id: 'decisive', name: 'Suspiciously Decisive', desc: "Win without once being 'easy'.", test: function (g) { return g.ending === 'win' && g.stats.easy === 0; } },
+    { id: 'early', name: 'Early Doors', desc: 'Get Mork online before 7:15 PM.', test: function (g) { return g.ending === 'win' && g.clock <= 19 * 60 + 15; } },
+    { id: 'mum', name: 'Hi Boys!', desc: "Meet Tom's mum.", test: function (g) { return !!g.seen.tommum; } },
+    { id: 'plus', name: 'Nicest Man Alive', desc: 'Receive a gift from Tom.', test: function (g) { return !!g.seen.generous; } },
+    { id: 'bday', name: 'Many Happy Returns', desc: "Play Tom's birthday.", test: function (g) { return g.dayKey === 'birthday'; } },
+    { id: 'launch', name: 'Day One Patch', desc: 'Play launch night.', test: function (g) { return g.dayKey === 'launch'; } },
+    { id: 'both', name: 'Every Day Is Game Day', desc: 'Win on a Sunday and a Wednesday.', test: function (g, wins) { return wins.indexOf('sunday') > -1 && wins.indexOf('wednesday') > -1; } },
+    { id: 'all', name: 'Completionist', desc: 'Find all five endings.', test: function (g, wins, ends) { return ends.length >= ENDING_COUNT; } }
+  ];
+  var BADGES_KEY = 'where-is-mork-badges', WINS_KEY = 'where-is-mork-wins', BEST_KEY = 'where-is-mork-best', SFX_KEY = 'where-is-mork-sfx';
+  var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // ---------- pixel sprites ----------
 
@@ -109,7 +144,7 @@
       choices: [
         { label: 'Send the casual invite', say: "7:30 as usual. You in?", p: 8, v: 2,
           re: [['tom', "In. I was in before you asked."], ['mork', '👍']], msg: "Mork reacted to Tom's message, not yours. Close enough." },
-        { label: 'Let Tom write it', say: 'Tom, you do it.', p: -2, v: 8,
+        { label: 'Let Tom write it', say: 'Tom, you do it.', p: -2, v: 8, set: 'gathering',
           re: [['tom', 'Brothers. Tonight we gather. Not for the game, but for what the game means. 7:30. Bring snacks and an open heart.'], ['mork', 'is this a cult']],
           msg: 'Mork will need time to process that.' }
       ] },
@@ -129,7 +164,7 @@
       chat: [['mork', 'just finishing something']],
       text: "It's 5:50. He said the same at 5:15.",
       choices: [
-        { label: 'Offer to push kick-off to 8:00', say: 'Mate, we can do 8 if you need it.', p: 12, v: -3, d: 30,
+        { label: 'Offer to push kick-off to 8:00', say: 'Mate, we can do 8 if you need it.', p: 12, v: -3, d: 30, next: 'prepare',
           re: [['tom', '8 is perfect. I need the time to prepare.']], msg: "He doesn't say what for." },
         { label: "Tell him we'll hold his seat", say: "No rush. Seat's yours.", p: 6, v: 3, re: [['mork', 'cheers mate']] }
       ] },
@@ -343,6 +378,129 @@
       choices: [
         { label: 'Blame the VPN', say: "That'll be a VPN thing.", p: 4, v: 2, re: [['tom', 'VPN. Definitely.']] },
         { label: 'Ask Tom nicely', say: 'Tom. Mate.', p: 8, v: -2, steals: 1, re: [['tom', "Fine. It's a shared account now. In spirit."]] }
+      ] },
+    { id: 'tomloan', who: ['tom'],
+      title: 'Tom needs a quick favour',
+      chat: [['tom', 'Quick question. Can you lend me £40 until the retreat?'], ['tom', "I'll pay you back with interest. In logs."]],
+      choices: [
+        { label: 'Lend it', say: 'Go on then.', p: 0, v: 4, steals: 1, next: 'loanrepay' },
+        { label: "Say you're skint", say: "I'm skint, mate.", p: 2, v: -1, re: [['tom', 'Understood. Respect.'], ['tom', '(what about Mork)']], msg: 'Mork is about to have a very long evening.' }
+      ] },
+    { id: 'poll', who: ['tom'],
+      title: 'Tom has started a poll',
+      chat: [['tom', 'Poll: what shall we play first?'], ['sys', '1. Chopping trees   2. Wood   3. Forestry']],
+      text: 'All the options are trees.',
+      choices: [
+        { label: 'Vote for chopping trees', p: 2, v: 6, re: [['tom', 'The people have spoken. And the people are right.']] },
+        { label: 'Vote for wood', p: 2, v: 6, re: [['tom', '…wood. You understand me.']] },
+        { label: 'Suggest a different game', say: 'Could we play something else?', p: 6, v: -8, re: [['tom', '…']], msg: 'The silence lasts about a hundred years.' }
+      ] },
+    { id: 'tommum', who: ['tom'],
+      title: "Tom's mum has joined the chat",
+      chat: [['sys', "Tom's mum joined the chat"], ['mum', 'Hi boys!'], ['mum', 'Is Tom with you? He told me he was going to Lisbon.']],
+      choices: [
+        { label: "Say he's here", say: "He's here! Chopping trees.", p: 2, v: 4, re: [['mum', 'Oh good. Tell him the neighbour has asked about the watch.']], msg: 'Tom has left the chat. Not for long.' },
+        { label: "Say you haven't seen him", say: "Haven't seen him in weeks.", p: 0, v: -2, re: [['mum', 'Typical.']] }
+      ] },
+    { id: 'newgame', who: ['mork', 'tom'],
+      title: 'Mork wants a different game',
+      chat: [['mork', 'what about something different tonight'], ['mork', 'something calmer. a farming one']],
+      text: 'Tom is typing…',
+      choices: [
+        { label: "Back Mork's idea", say: 'Farming sounds nice, actually.', p: 10, v: -6, re: [['tom', 'Farming involves trees.'], ['tom', 'I accept.']], msg: 'Tom accepts, slowly, like a man signing a contract.' },
+        { label: "Back Tom's idea", say: "Same as always. It's tradition.", p: -4, v: 6, re: [['mork', 'fine. same as always']], msg: 'Mork gives in. He always does.' }
+      ] },
+    { id: 'tomalibi', who: ['tom'],
+      title: 'Tom has an alibi',
+      chat: [['tom', 'Just so you know, I was at home all last Thursday.'], ['tom', 'Alone. Watching a documentary.']],
+      text: 'Nobody asked.',
+      choices: [
+        { label: "Say 'nobody asked'", say: 'Nobody asked, Tom.', p: 2, v: -2, re: [['tom', 'Good. That is good.']] },
+        { label: "Say 'okay'", say: 'Okay.', p: 2, v: 2, re: [['tom', 'Thank you. That is all I wanted.'], ['tom', 'A nature one.']], msg: 'You now have an alibi you did not request.' }
+      ] },
+    { id: 'tomcook', who: ['tom'],
+      title: 'Tom is cooking for everyone',
+      chat: [["tom", "Cooking for everyone tonight. Recipe's below."], ['sys', "[Tom's recipe: bread, butter, faith]"]],
+      text: 'You are all in different houses. The food will not reach anyone.',
+      choices: [
+        { label: 'Cook along', say: "I'll cook along.", p: 0, v: 8, t: 15, re: [['tom', 'Beautiful. Now add the faith.']] },
+        { label: 'Order a curry', say: "I'm ordering a curry.", p: 4, v: -2, re: [['tom', 'A curry can be a kind of faith.']] }
+      ] },
+
+    // scenes: reached through a `next` from another choice
+    { id: 'loanrepay', scene: true, who: ['tom'],
+      title: 'Tom has repaid you',
+      chat: [['tom', 'Repaid!'], ['sys', 'Tom sent you 12 Logs']],
+      text: "That's… a fair exchange?",
+      choices: [
+        { label: 'Accept the logs', p: 0, v: 6, re: [['tom', 'I knew you were a good egg.']] },
+        { label: 'Ask for the £40', say: 'The £40, Tom.', p: 2, v: -4, re: [['tom', 'Money is just logs that haven\'t grown up yet.']] }
+      ] },
+    { id: 'prepare', scene: true, who: ['tom'],
+      title: 'Tom has prepared',
+      chat: [['tom', "I've prepared a presentation."], ['sys', 'Slide 1 of 47']],
+      text: 'It is about the evening ahead.',
+      choices: [
+        { label: 'Sit through it', p: 6, v: 6, t: 15, re: [['tom', 'Slide 12 is the important one.']], msg: 'Slide 12 is a picture of a tree.' },
+        { label: 'Skip to the end', say: 'Skip to the last slide.', p: 2, v: -2, re: [['tom', 'The last slide is also a tree.']] }
+      ] },
+
+    // callbacks from earlier choices
+    { id: 'gathering', req: 'gathering', who: ['mork', 'tom'],
+      title: 'The Gathering went wide',
+      chat: [['mork', 'tom emailed my boss'], ['mork', 'subject line: DESTINY'], ['mork', 'he replied all']],
+      text: "'The Gathering' has 41 recipients.",
+      choices: [
+        { label: 'Ask Tom to recall it', say: 'Tom. Recall the email.', p: 6, v: -2, re: [['tom', 'Recalling would be a betrayal of the message.']], msg: 'It cannot be recalled.' },
+        { label: "Tell Mork it's an honour", say: "Honestly, your boss being invited is an honour.", p: 2, v: 4, re: [['mork', 'he asked if he can come']], msg: 'You now have a plus-one problem.' }
+      ] },
+
+    // special nights
+    { id: 'cake', only: 'birthday', who: ['tom'],
+      title: 'Tom has ordered himself a cake',
+      chat: [['tom', 'Quick announcement.'], ['tom', "I've ordered myself a cake."], ['sys', "[photo: a cake with Tom's face on it]"]],
+      text: "It's a very good likeness.",
+      choices: [
+        { label: 'Sing happy birthday', p: -2, v: 10, t: 15, re: [['tom', 'Louder. Mork can hear us from here.']] },
+        { label: 'Ask who paid', say: 'Who paid for that?', p: 2, v: -2, steals: 1, re: [['tom', 'A friend. A very generous friend.']], msg: 'It is not clear which friend.' }
+      ] },
+    { id: 'toast', only: 'birthday', who: ['tom'],
+      title: 'Tom has a toast',
+      chat: [['tom', 'A toast.'], ['tom', 'To the nicest man who has ever lived.'], ['tom', 'I will not say who.']],
+      choices: [
+        { label: 'Raise a glass', p: 0, v: 8, t: 15, msg: 'You raise a glass. He cries. It takes a while.' },
+        { label: 'Heckle gently', say: 'We know, Tom.', p: 4, v: -2, re: [['tom', 'The heckler is also my friend.']] }
+      ] },
+    { id: 'wish', only: 'birthday', who: ['tom', 'mork'],
+      title: 'Tom is making a wish',
+      chat: [['tom', 'Everyone make a wish.'], ['tom', 'Mine is a secret.'], ['tom', 'It involves the Geneva thing.']],
+      choices: [
+        { label: 'Wish for Mork to show up', p: 12, v: 4, re: [['mork', 'why did my phone just light up']], msg: 'Wishes work if you do the other 80%.' },
+        { label: 'Wish for a quiet night', p: 4, v: 6, msg: 'You wish for a quiet night. You have the wrong friends for that.' }
+      ] },
+    { id: 'bug', only: 'launch', who: ['tom'],
+      title: "Tom's game has a bug",
+      chat: [['tom', 'Small thing.'], ['tom', 'The trees cannot be chopped.']],
+      text: "It's a tree-chopping game. That's the whole game.",
+      choices: [
+        { label: 'Report the bug', say: 'The trees need to be choppable, Tom.', p: 2, v: 4, re: [['tom', 'The trees are choosing not to be.']] },
+        { label: 'Call it a feature', say: "It's a feature. The trees have rights.", p: -2, v: 10, re: [['tom', '…the trees have rights.']], msg: 'This may be Tom\'s best idea yet.' }
+      ] },
+    { id: 'reviews', only: 'launch', who: ['tom'],
+      title: 'The first review',
+      chat: [['sys', '★★★★★ "Best game ever made. My friend Tom made it." (user: TomsOtherAccount)']],
+      choices: [
+        { label: 'Say nothing', p: 2, v: 4, easy: 1, msg: 'You say nothing. Everyone is on the same page.' },
+        { label: 'Point it out', say: "That's your other account, Tom.", p: 4, v: -4, re: [['tom', 'It is my friend. He is also called Tom.']] }
+      ] },
+    { id: 'crash', only: 'launch', who: ['tom', 'don'],
+      title: 'The servers are down',
+      chat: [['tom', 'The servers are down.'], ['tom', 'The servers are your console, Don.'], ['tom', 'Is it plugged in?']],
+      choices: [
+        { label: 'Restart', sub: 'Risky', risk: 0.5,
+          ok: { p: 6, v: 8, re: [['tom', 'IT LIVES']], msg: 'It lives.' },
+          bad: { p: 0, v: -4, t: 15, re: [['tom', 'I am not angry. I am a tree. I am calm.']], msg: 'It does not live.' } },
+        { label: 'Blame the router', say: "It's the router.", p: 0, v: 3, re: [['tom', "It's always the router."]] }
       ] }
   ];
 
@@ -362,9 +520,9 @@
   var g = null;
 
   function newGame(dayKey) {
-    var day = DAYS[dayKey];
-    return { dayKey: dayKey, day: day, clock: START, leaveAt: START + WINDOW_MIN, shifts: 0,
-      progress: 0, vibes: 40, pool: [], ev: null, phase: 'event', result: null, ending: null, started: false,
+    var day = DAYS[dayKey], comp = COMPS[Math.floor(Math.random() * COMPS.length)];
+    return { dayKey: dayKey, day: day, comp: comp, clock: START, leaveAt: START + WINDOW_MIN, shifts: 0,
+      progress: clamp(comp.ready || 0, 0, 100), vibes: 40 + (day.vibes || 0) + (comp.vibes || 0), pool: [], queue: [], seen: {}, ev: null, phase: 'event', result: null, ending: null, started: false,
       flags: {}, stats: { trees: 0, steals: 0, maybes: 0, easy: 0, lostMin: 0, miniPlayed: 0, miniWon: 0 } };
   }
 
@@ -378,7 +536,12 @@
   function pickEvent() {
     if (!g.started) { g.started = true; return EVENTS.filter(function (e) { return e.first; })[0]; }
     function byId(id) { return EVENTS.filter(function (e) { return e.id === id; })[0]; }
-    function ok(e) { return !e.req || g.flags[e.req]; }
+    function ok(e) { return !e.scene && (!e.req || g.flags[e.req]) && (!e.only || e.only === g.dayKey); }
+    if (g.queue.length) {
+      var qe = byId(g.queue.shift()), qi = g.pool.indexOf(qe.id);
+      if (qi > -1) g.pool.splice(qi, 1);
+      return qe;
+    }
     var cand = g.pool.map(byId).filter(ok);
     if (!cand.length) {
       g.pool = EVENTS.filter(function (e) { return !e.first; }).map(function (e) { return e.id; });
@@ -387,7 +550,9 @@
     var weights = cand.map(function (e) {
       var w = e.lucky ? 0.5 : 1;
       if (e.work) w *= g.day.workWeight;
-      if (e.req) w *= 4; // callbacks should actually land
+      if (e.req || e.only) w *= 4; // callbacks and special-night events should actually land
+      if (g.comp.boost[e.id] !== undefined) w *= g.comp.boost[e.id];
+      if (g.day.tomBoost && e.who.indexOf('tom') > -1) w *= g.day.tomBoost;
       return w;
     });
     var total = weights.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * total, i = 0;
@@ -421,12 +586,55 @@
     return list;
   }
 
+  function loadJSON(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || 'null') || fallback; } catch (e) { return fallback; }
+  }
+  function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { /* ignore */ } }
+  function unlocked(dayKey) {
+    if (dayKey === 'birthday') return endingsFound().indexOf('win') > -1;
+    if (dayKey === 'launch') return endingsFound().length >= 3;
+    return true;
+  }
+
+  // ---------- sound (tiny synth, off by default) ----------
+
+  var sfxOn = false, ac = null;
+  try { sfxOn = localStorage.getItem(SFX_KEY) === '1'; } catch (e) { /* ignore */ }
+  function tone(freq, dur, type, vol, delay) {
+    if (!sfxOn) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ac = ac || new AC();
+      if (ac.state === 'suspended' && ac.resume) ac.resume();
+      var o = ac.createOscillator(), gain = ac.createGain(), t0 = ac.currentTime + (delay || 0);
+      o.type = type || 'square';
+      o.frequency.value = freq;
+      gain.gain.setValueAtTime(vol || 0.04, t0);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(gain);
+      gain.connect(ac.destination);
+      o.start(t0);
+      o.stop(t0 + dur + 0.02);
+    } catch (e) { /* audio is optional */ }
+  }
+  var SFX = {
+    pop: function () { tone(880, 0.05); },
+    click: function () { tone(520, 0.05); },
+    good: function () { tone(523, 0.09); tone(659, 0.09, 0, 0, 0.09); tone(784, 0.14, 0, 0, 0.18); },
+    bad: function () { tone(330, 0.12, 'sawtooth'); tone(220, 0.22, 'sawtooth', 0.04, 0.12); },
+    win: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.16, 'square', 0.05, i * 0.13); }); },
+    lose: function () { [392, 330, 262, 196].forEach(function (f, i) { tone(f, 0.2, 'triangle', 0.06, i * 0.16); }); }
+  };
+  function sfx(name) { if (sfxOn && SFX[name]) SFX[name](); }
+
   // ---------- rendering ----------
 
   root.innerHTML =
     '<div class="gn">' +
       '<div class="gn-top">' +
         '<div class="gn-clock" id="gn-clock"></div>' +
+        '<button type="button" class="gn-snd" id="gn-snd" aria-pressed="false"></button>' +
         '<div class="gn-meter">VIBES <div class="gn-bar"><i id="gn-vibes"></i></div></div>' +
       '</div>' +
       '<div class="gn-tv">' +
@@ -450,7 +658,7 @@
     d.type = 'button';
     d.className = 'gn-char gn-char-' + id;
     d.setAttribute('aria-label', 'Poke ' + CHARS[id].name);
-    d.innerHTML = sprite(CHARS[id].rows, 6) + '<span>' + CHARS[id].name + '</span><small></small><em class="gn-say" aria-live="polite"></em>';
+    d.innerHTML = sprite(CHARS[id].rows, 6) + '<span>' + CHARS[id].name + '</span><small></small><i class="gn-tally"></i><em class="gn-say" aria-live="polite"></em>';
     d.addEventListener('click', function () { poke(id); });
     elCouch.appendChild(d);
     couchEls[id] = d;
@@ -494,8 +702,13 @@
     el.classList.add('poked');
     window.clearTimeout(sayT[id]);
     sayT[id] = window.setTimeout(function () { b.classList.remove('on'); }, 2800);
-    var hint = document.getElementById('gn-hint');
-    if (hint) hint.parentNode.removeChild(hint);
+    if (!g) setHint('');
+  }
+  function setHint(text) {
+    var h = document.getElementById('gn-hint');
+    if (!h) return;
+    h.textContent = text;
+    h.style.display = text ? '' : 'none';
   }
 
   function setStatus() {
@@ -512,8 +725,29 @@
     });
   }
 
+  function renderTallies() {
+    var st = g ? g.stats : null;
+    couchEls.don.querySelector('.gn-tally').textContent = st ? "EASY x" + st.easy : '';
+    couchEls.tom.querySelector('.gn-tally').textContent = st ? '\ud83c\udf32 ' + st.trees + '  \ud83c\udf92 ' + st.steals : '';
+    couchEls.tom.querySelector('.gn-tally').classList.toggle('hot', !!st && st.steals >= 3);
+    couchEls.mork.querySelector('.gn-tally').textContent = st ? "MAYBE x" + st.maybes : '';
+  }
+  function renderSnd() {
+    var b = document.getElementById('gn-snd');
+    b.textContent = sfxOn ? 'SOUND ON' : 'SOUND OFF';
+    b.setAttribute('aria-pressed', sfxOn ? 'true' : 'false');
+  }
+  document.getElementById('gn-snd').addEventListener('click', function () {
+    sfxOn = !sfxOn;
+    try { localStorage.setItem(SFX_KEY, sfxOn ? '1' : '0'); } catch (e) { /* ignore */ }
+    renderSnd();
+    sfx('good');
+  });
+  renderSnd();
+
   function renderMeters() {
     setStatus();
+    renderTallies();
     if (!g) {
       elClock.innerHTML = 'GAME NIGHT';
       elVibes.style.width = '40%';
@@ -529,44 +763,109 @@
   function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
   function renderIntro() {
+    cancelReveal();
     g = null;
     setActors(null);
     renderMeters();
-    var found = endingsFound().length;
+    setHint(pokes.don + pokes.tom + pokes.mork ? '' : 'TAP SOMEONE ON THE SOFA');
+    var found = endingsFound().length, earned = loadJSON(BADGES_KEY, []), best = loadJSON(BEST_KEY, {});
+    var buttons = DAY_ORDER.map(function (k, i) {
+      var d = DAYS[k], bt = best[k] ? ' · BEST ' + best[k] : '';
+      if (!unlocked(k)) return '<button class="gn-btn gn-locked" disabled>LOCKED<small>' + d.hint + '</small></button>';
+      return '<button class="gn-btn" data-key="' + (i + 1) + '" data-day="' + k + '">' + d.name.toUpperCase() + bt + '<small>' + d.blurb + '</small></button>';
+    }).join('');
+    var badgeList = BADGES.map(function (bd) {
+      var has = earned.indexOf(bd.id) > -1;
+      return '<li class="' + (has ? 'got' : '') + '">' + (has ? '<b>' + bd.name + '</b> ' : '??? ') + bd.desc + '</li>';
+    }).join('');
     elCard.innerHTML =
       '<h2>WHERE\'S MORK?</h2>' +
       "<p>Kick-off is 7:30. The chat pings at 5:30. Tom is online for the first time in three weeks. He's one of the nicest men alive, and there's a non-zero chance he's robbing you. Mork is the busiest man you know, but once he's online nothing gets through: no calls, no work, no interruptions. Getting him there is the hard part. You're Don. You're easy.</p>" +
-      '<p>Some choices are mini-games. Tom never forgets a favour. Poke the gang on the sofa any time.</p>' +
-      '<div class="gn-choices">' +
-        '<button class="gn-btn" data-key="1" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
-        '<button class="gn-btn" data-key="2" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
-      '</div>' +
-      '<p class="gn-found">Endings found: ' + found + ' / ' + ENDING_COUNT + '</p>';
+      '<div class="gn-choices">' + buttons + '</div>' +
+      '<details class="gn-badges"><summary>Badges: ' + earned.length + ' / ' + BADGES.length + '</summary><ul>' + badgeList + '</ul></details>' +
+      '<p class="gn-found">Endings found: ' + found + ' / ' + ENDING_COUNT + '. Tom never forgets a favour. Poke the gang on the sofa any time.</p>';
+  }
+
+  var reveal = null;
+  function cancelReveal() { if (reveal) { reveal.stop(); reveal = null; } }
+
+  var NAMES = { don: 'Don', tom: 'Tom', mork: 'Mork', mum: "Tom's mum", sys: '' };
+  function msgHtml(m) {
+    return '<div class="gn-msg gn-msg-' + m[0] + '">' + (NAMES[m[0]] ? '<b>' + NAMES[m[0]] + '</b>' : '') + '<span>' + esc(m[1]) + '</span></div>';
+  }
+  function typingHtml(who) {
+    return '<div class="gn-msg gn-msg-' + who + ' gn-typing"><b>' + NAMES[who] + '</b><span><i></i><i></i><i></i></span></div>';
+  }
+  // messages arrive one at a time with a typing indicator; any tap or key skips ahead
+  function revealChat(box, list, done) {
+    cancelReveal();
+    var i = 0, timer = 0, typing = null, over = false;
+    function drop() { if (typing && typing.parentNode) typing.parentNode.removeChild(typing); typing = null; }
+    function scroll() { elCard.scrollTop = elCard.scrollHeight; }
+    function end() {
+      if (over) return;
+      over = true;
+      window.clearTimeout(timer);
+      drop();
+      for (; i < list.length; i++) box.insertAdjacentHTML('beforeend', msgHtml(list[i]));
+      reveal = null;
+      done();
+    }
+    function step() {
+      drop();
+      if (i >= list.length) { end(); return; }
+      var m = list[i], sys = m[0] === 'sys';
+      if (!sys) { box.insertAdjacentHTML('beforeend', typingHtml(m[0])); typing = box.lastChild; scroll(); }
+      timer = window.setTimeout(function () {
+        drop();
+        box.insertAdjacentHTML('beforeend', msgHtml(m));
+        i++;
+        sfx('pop');
+        scroll();
+        timer = window.setTimeout(step, 220);
+      }, sys ? 280 : 380 + Math.min(1000, m[1].length * 14));
+    }
+    if (REDUCED || !list.length) { end(); return; }
+    reveal = { skip: end, stop: function () { over = true; window.clearTimeout(timer); } };
+    step();
+  }
+  function afterChat(box, list, cb) {
+    var after = elCard.querySelector('.gn-after');
+    revealChat(box, list, function () {
+      if (after) after.classList.remove('pending');
+      cb();
+    });
   }
 
   function renderEvent() {
     var ev = g.ev;
     setActors(ev);
     renderMeters();
-    var html = '<h2>' + esc(ev.title) + '</h2>' + bubbles(ev.chat) + (ev.text ? '<p class="gn-nar">' + esc(ev.text) + '</p>' : '') + '<div class="gn-choices">';
+    var narr = (ev.first ? 'Tonight: ' + g.comp.name + '. ' + g.comp.blurb + ' ' : '') + (ev.text || '');
+    var html = '<h2>' + esc(ev.title) + '</h2><div class="gn-chat" id="gn-chat"></div><div class="gn-after pending">' +
+      (narr ? '<p class="gn-nar">' + esc(narr) + '</p>' : '') + '<div class="gn-choices">';
     ev.choices.forEach(function (c, i) {
       html += '<button class="gn-btn" data-key="' + (i + 1) + '" data-choice="' + i + '">' + esc(c.label) + (c.sub ? '<small>' + esc(c.sub) + '</small>' : '') + '</button>';
     });
-    elCard.innerHTML = html + '</div>';
-  }
-
-  var NAMES = { don: 'Don', tom: 'Tom', mork: 'Mork', sys: '' };
-  function bubbles(list) {
-    if (!list || !list.length) return '';
-    return '<div class="gn-chat">' + list.map(function (m) {
-      return '<div class="gn-msg gn-msg-' + m[0] + '">' + (NAMES[m[0]] ? '<b>' + NAMES[m[0]] + '</b>' : '') + '<span>' + esc(m[1]) + '</span></div>';
-    }).join('') + '</div>';
+    elCard.innerHTML = html + '</div></div>';
+    elCard.scrollTop = 0;
+    afterChat($('gn-chat'), ev.chat || [], function () { elCard.scrollTop = elCard.scrollHeight; });
   }
 
   function chip(label, val, goodWhenPositive) {
     if (!val) return '';
     var good = goodWhenPositive ? val > 0 : val < 0;
     return '<span class="gn-chip ' + (good ? 'good' : 'bad') + '">' + label + ' ' + (val > 0 ? '+' : '') + val + '</span>';
+  }
+
+  function flash(who, cls) {
+    who.forEach(function (id) {
+      var el = couchEls[id];
+      el.classList.remove('poked', 'ring');
+      void el.offsetWidth;
+      el.classList.add(cls);
+      window.setTimeout(function () { el.classList.remove(cls); }, 900);
+    });
   }
 
   function renderResult() {
@@ -579,15 +878,22 @@
     elCard.innerHTML =
       '<h2>' + esc(g.ev.title) + '</h2>' +
       (r.mini && r.mini.note ? '<p class="gn-note">' + esc(r.mini.note) + '</p>' : '') +
-      bubbles((r.say ? [['don', r.say]] : []).concat(r.re || [])) +
+      '<div class="gn-chat" id="gn-chat"></div><div class="gn-after pending">' +
       (r.msg ? '<p class="gn-nar">' + esc(r.msg) + '</p>' : '') +
       '<p class="gn-aside">' + esc(r.trees) + '</p>' +
       '<div class="gn-chips">' + chips + '</div>' +
-      '<button class="gn-btn gn-go" data-next="1">CONTINUE</button>';
-    floatDelta(elVibes.parentNode, r.v);
-    floatDelta(elHp.parentNode, r.p);
-    var b = elCard.querySelector('[data-next]');
-    if (b) b.focus();
+      '<button class="gn-btn gn-go" data-next="1">CONTINUE</button></div>';
+    elCard.scrollTop = 0;
+    afterChat($('gn-chat'), (r.say ? [['don', r.say]] : []).concat(r.re || []), function () {
+      floatDelta(elVibes.parentNode, r.v);
+      floatDelta(elHp.parentNode, r.p);
+      var net = r.p + r.v;
+      flash(g.ev.who, net >= 4 ? 'poked' : net < 0 ? 'ring' : 'poked');
+      sfx(net >= 6 ? 'good' : net < 0 ? 'bad' : 'click');
+      elCard.scrollTop = elCard.scrollHeight;
+      var b = elCard.querySelector('[data-next]');
+      if (b) b.focus({ preventScroll: true });
+    });
   }
 
   function floatDelta(anchor, val) {
@@ -618,12 +924,30 @@
     }]
   };
 
+  function scoreOf() {
+    var base = g.ending === 'win' ? 50 : g.ending === 'late' ? 20 : 0;
+    return base + Math.round(g.progress) + Math.round(g.vibes / 2) + g.stats.miniWon * 5 + (g.ending === 'heist' ? -10 : 0);
+  }
+
   function renderEnd() {
+    cancelReveal();
     var v = VERDICT[g.ending], st = g.stats;
     setActors(null);
     renderMeters();
-    var found = recordEnding(g.ending).length;
+    var found = recordEnding(g.ending);
+    var wonDays = loadJSON(WINS_KEY, []);
+    if (g.ending === 'win' && wonDays.indexOf(g.dayKey) === -1) { wonDays.push(g.dayKey); saveJSON(WINS_KEY, wonDays); }
+    var earned = loadJSON(BADGES_KEY, []), fresh = [];
+    BADGES.forEach(function (bd) {
+      if (earned.indexOf(bd.id) === -1 && bd.test(g, wonDays, found)) { earned.push(bd.id); fresh.push(bd); }
+    });
+    if (fresh.length) saveJSON(BADGES_KEY, earned);
+    var score = scoreOf(), best = loadJSON(BEST_KEY, {}), isBest = !best[g.dayKey] || score > best[g.dayKey];
+    if (isBest) { best[g.dayKey] = score; saveJSON(BEST_KEY, best); }
+    g.shareText = ['WHERE\'S MORK? ' + g.day.name, v[0], fmtClock(g.clock) + '  \ud83c\udf32 ' + st.trees + '  \ud83c\udf92 ' + st.steals + '  \ud83c\udfae ' + st.miniWon + '/' + st.miniPlayed,
+      'Score ' + score, 'https://dpt106.github.io/game-night/'].join('\n');
     var lines = [
+      'Tonight: <b>' + g.comp.name + '</b>',
       'Trees felled by Tom: <b>' + st.trees + '</b>',
       st.steals === 0 ? 'Tom took nothing. Either a saint, or <b>very good</b>.'
         : st.steals < 3 ? "Tom 'looked after' <b>" + st.steals + '</b> thing' + (st.steals === 1 ? '' : 's') + '. Probably fine.'
@@ -639,11 +963,16 @@
     elCard.setAttribute('data-ending', g.ending);
     elCard.innerHTML =
       '<h2>' + v[0] + '</h2><p>' + v[1]() + '</p>' +
+      '<p class="gn-score">SCORE <b>' + score + '</b>' + (isBest ? ' <span class="gn-new">NEW BEST</span>' : ' · BEST ' + best[g.dayKey]) + '</p>' +
+      (fresh.length ? '<div class="gn-chips">' + fresh.map(function (bd) { return '<span class="gn-chip good" title="' + bd.desc + '">NEW BADGE: ' + bd.name.toUpperCase() + '</span>'; }).join('') + '</div>' : '') +
       '<ul class="gn-stats">' + lines.map(function (l) { return '<li>' + l + '</li>'; }).join('') + '</ul>' +
-      '<button class="gn-btn gn-go" data-again="1">PLAY AGAIN</button>' +
-      '<p class="gn-found">Endings found: ' + found + ' / ' + ENDING_COUNT + '</p>';
+      '<div class="gn-choices"><button class="gn-btn gn-go" data-again="1">PLAY AGAIN</button>' +
+      '<button class="gn-btn gn-go gn-alt" data-copy="1">COPY RESULT</button></div>' +
+      '<p class="gn-found">Endings found: ' + found.length + ' / ' + ENDING_COUNT + ' · Badges: ' + earned.length + ' / ' + BADGES.length + '</p>';
+    sfx(g.ending === 'win' ? 'win' : g.ending === 'late' ? 'good' : 'lose');
+    elCard.scrollTop = 0;
     var b = elCard.querySelector('[data-again]');
-    if (b) b.focus();
+    if (b) b.focus({ preventScroll: true });
   }
 
   // ---------- game flow ----------
@@ -655,6 +984,7 @@
     g.clock += mins;
     if (o.d && g.shifts < 2) { g.leaveAt += o.d; g.shifts++; }
     if (o.set) g.flags[o.set] = 1;
+    if (o.next) g.queue.push(o.next);
     g.stats.steals += o.steals || 0;
     g.stats.maybes += o.maybes || 0;
     g.stats.easy += o.easy || 0;
@@ -695,6 +1025,7 @@
       return;
     }
     g.ev = pickEvent();
+    g.seen[g.ev.id] = 1;
     g.phase = 'event';
     renderEvent();
   }
@@ -928,10 +1259,20 @@
     return function () { window.cancelAnimationFrame(raf); };
   };
 
+  function copyResult(btn) {
+    var text = g && g.shareText;
+    if (!text) return;
+    function ok() { btn.textContent = 'COPIED!'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { window.prompt('Copy your result:', text); });
+    else window.prompt('Copy your result:', text);
+  }
+
   elCard.addEventListener('click', function (e) {
+    if (reveal) { reveal.skip(); return; }
     var t = e.target.closest ? e.target.closest('button') : null;
     if (!t) return;
-    if (t.hasAttribute('data-day')) { g = newGame(t.getAttribute('data-day')); nextRound(); }
+    if (t.hasAttribute('data-day')) { g = newGame(t.getAttribute('data-day')); setHint('TONIGHT: ' + g.comp.name.toUpperCase()); sfx('click'); nextRound(); }
+    else if (t.hasAttribute('data-copy')) copyResult(t);
     else if (t.hasAttribute('data-choice')) choose(parseInt(t.getAttribute('data-choice'), 10));
     else if (t.hasAttribute('data-next')) nextRound();
     else if (t.hasAttribute('data-again')) { elCard.removeAttribute('data-ending'); renderIntro(); }
@@ -940,6 +1281,7 @@
   // number keys pick a choice
   document.addEventListener('keydown', function (e) {
     if (e.altKey || e.ctrlKey || e.metaKey || mini) return;
+    if (reveal && (e.key === ' ' || e.key === 'Enter' || e.key >= '1' && e.key <= '9')) { e.preventDefault(); reveal.skip(); return; }
     var n = parseInt(e.key, 10);
     if (!(n >= 1)) return;
     var btns = elCard.querySelectorAll('.gn-choices .gn-btn');
