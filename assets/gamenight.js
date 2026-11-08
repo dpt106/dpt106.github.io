@@ -2,7 +2,7 @@
    You are Don. Get the busiest man in the group online before the session
    starts, keep the vibes up, and try not to be the one who decides anything.
    Once Mork is in he is fully locked in, so the whole fight is the lead-up.
-   Some choices launch a mini-game, and the gang on the sofa can be poked.
+   Events are group-chat messages, earlier choices come back later, some launch mini-games, and the gang on the sofa can be poked.
    Rendered into #gamenight. */
 (function () {
   'use strict';
@@ -18,7 +18,7 @@
   var WIN_READY = 65;           // readiness needed at kick-off for Mork to be on time
   var LATE_READY = 40;          // enough to turn up late and fall asleep on the controller
   var ENDINGS_KEY = 'is-mork-coming-endings';
-  var ENDING_COUNT = 4;
+  var ENDING_COUNT = 5;
 
   var DAYS = {
     sunday: { name: 'Sunday', next: 'Wednesday', blurb: 'Family dinner, then baths. Mork is a hostage until 7.', workWeight: 1 },
@@ -91,141 +91,258 @@
   ];
 
   // ---------- events ----------
-  // Effects: p = Mork readiness, v = vibes, t = extra minutes lost, d = minutes
-  // the kick-off is pushed back, plus counters: steals, maybes, easy. A choice
-  // can instead carry ok/bad outcomes, resolved by luck (risk) or by the
-  // Timber! mini-game.
+  // An event is a bit of group chat: `chat` is a list of [who, text] messages
+  // ('sys' for notifications), `text` is a short dry aside from Don.
+  // A choice has a `label` (the action), an optional `say` (the message Don
+  // actually sends) and its outcome: p = Mork readiness, v = vibes,
+  // t = extra minutes lost, d = kick-off pushed back, counters (steals, maybes,
+  // easy), `re` = the replies that come back, `msg` = Don's aside, and `set` =
+  // a flag that makes a later callback event possible (`req`).
+  // A choice can carry ok/bad outcomes instead, decided by luck (`risk`) or a
+  // mini-game (`game`).
 
   var EVENTS = [
     { id: 'ping', first: true, who: ['don', 'tom'],
       title: '5:30 PM. The group chat',
-      text: "Two hours to kick-off. Tom has been online since two. Mork hasn't been seen since breakfast. Somebody has to send the invite, and it won't be Mork.",
+      chat: [['sys', 'Game Night. 5:30 PM'], ['tom', "Hello my friends!! I've been online since 2. Tonight is going to be special."], ['tom', 'Who is in??']],
+      text: "Two hours to kick-off. Mork hasn't been seen since breakfast.",
       choices: [
-        { label: 'Send the casual invite', p: 8, v: 2, msg: "You send: 'You in tonight?' Tom replies in four seconds. Mork gives Tom's reply a thumbs-up." },
-        { label: 'Let Tom write it', p: -2, v: 8, msg: "He calls it 'The Gathering'. Four paragraphs, and the word 'destiny' twice. Mork will need time to read it." }
+        { label: 'Send the casual invite', say: "7:30 as usual. You in?", p: 8, v: 2,
+          re: [['tom', "In. I was in before you asked."], ['mork', '👍']], msg: "Mork reacted to Tom's message, not yours. Close enough." },
+        { label: 'Let Tom write it', say: 'Tom, you do it.', p: -2, v: 8,
+          re: [['tom', 'Brothers. Tonight we gather. Not for the game, but for what the game means. 7:30. Bring snacks and an open heart.'], ['mork', 'is this a cult']],
+          msg: 'Mork will need time to process that.' }
       ] },
     { id: 'seen', who: ['mork'],
       title: 'Mork has read it',
-      text: "Two blue ticks, and nothing else. That's normal for Mork. It's also not a yes.",
+      chat: [['sys', '✓✓ Seen by Mork, 5:41 PM']],
+      text: "Nothing else. That's normal for him. It isn't a yes.",
       choices: [
         { label: 'Wait', p: 2, v: 0, easy: 1, msg: 'You wait. The two ticks stare back at you.' },
-        { label: 'Send a gif', p: 5, v: 4, msg: "Mork replies with one laughing emoji. For Mork, that's progress." },
+        { label: 'Send a gif', say: '[gif: man in a headset, nodding slowly]', p: 5, v: 4, re: [['mork', '😂']], msg: "One laughing emoji. For Mork, that's progress." },
         { label: "Catch him while he's typing", sub: 'Mini-game: timing', game: 'typing',
-          ok: { p: 12, v: 4, msg: "'ok yeah go on then.' Four words. From Mork, that's a speech." },
-          bad: { p: 0, v: -3, msg: "'Typing…' appears, then vanishes. Nothing arrives. Probably a work email." } }
+          ok: { p: 12, v: 4, re: [['mork', 'ok yeah go on then']], msg: "Four words. From Mork, that's a speech." },
+          bad: { p: 0, v: -3, re: [['sys', 'Mork is typing…'], ['sys', '(stopped)']], msg: 'Probably a work email.' } }
       ] },
     { id: 'work', who: ['mork'], work: true,
       title: 'Mork is stuck at work',
-      text: "'Just finishing something.' It's 5:50. He said that at 5:15 as well.",
+      chat: [['mork', 'just finishing something']],
+      text: "It's 5:50. He said the same at 5:15.",
       choices: [
-        { label: 'Offer to push kick-off to 8:00', p: 12, v: -3, d: 30, msg: "Tom agrees instantly. He'll use the extra half hour to 'prepare'. He doesn't say what for." },
-        { label: "Tell him we'll hold his seat", p: 6, v: 3, msg: "'Cheers, mate.' Small thing. He'll remember it." }
+        { label: 'Offer to push kick-off to 8:00', say: 'Mate, we can do 8 if you need it.', p: 12, v: -3, d: 30,
+          re: [['tom', '8 is perfect. I need the time to prepare.']], msg: "He doesn't say what for." },
+        { label: "Tell him we'll hold his seat", say: "No rush. Seat's yours.", p: 6, v: 3, re: [['mork', 'cheers mate']] }
+      ] },
+    { id: 'boss', who: ['mork'], work: true,
+      title: 'The boss walks past',
+      chat: [['mork', 'boss just walked past'], ['mork', 'pretending to work'], ['mork', '🫡']],
+      choices: [
+        { label: 'Go quiet', say: '(silence)', p: 8, v: 0, re: [['mork', '…ta']], msg: 'The boss walks on. Mork breathes.' },
+        { label: 'Send a meme to cover for him', sub: 'Risky', risk: 0.5, say: '[meme: this is fine]',
+          ok: { p: 10, v: 6, re: [['mork', 'he saw it. he laughed. he wants a copy']], msg: 'Mork is now the office comedian.' },
+          bad: { p: -4, v: -4, re: [['mork', 'he saw it. we are having a meeting about it tomorrow']], msg: 'Not the meme he needed.' } }
       ] },
     { id: 'dinner', who: ['mork'],
-      title: "Mork is on kid's dinner",
-      text: "He sends one photo: a plate of chicken dippers. No caption. You've never seen a clearer cry for help.",
+      title: "Dinner for one small person",
+      chat: [['mork', '[photo: a plate of chicken dippers]']],
+      text: "No caption. You know a cry for help when you see one.",
       choices: [
-        { label: 'Suggest takeaway', p: 8, v: -2, msg: "'Good shout.' Ordered within the minute. The man gets things done." },
-        { label: 'Leave him to it', p: 2, v: 2, msg: 'Dinner happens eventually. Nobody says anything.' }
+        { label: 'Suggest takeaway', say: 'Just get a pizza in, mate.', p: 8, v: -2, re: [['mork', 'ordered. 25 mins']], msg: 'Sorted in under a minute. The man gets things done.' },
+        { label: 'Leave him to it', p: 2, v: 2, msg: 'Dinner gets made eventually. Nobody speaks.' }
       ] },
     { id: 'bedtime', who: ['mork', 'tom'],
       title: 'Bedtime story',
-      text: "Mork's kid wants 'one more'. Mork has read this book six times this week.",
+      chat: [['mork', "kid wants one more story. i've read this one six times this week"]],
       choices: [
-        { label: 'Tom offers to read it on a call', p: 4, v: 8, msg: "Tom is brilliant at it, all the voices. The kid asks for him again. Tom says to 'remember his name'. For later." },
-        { label: 'Tell him to read the short one', p: 8, v: -3, t: 15, msg: "'There is no short one, Don.' There is a short one." }
+        { label: 'Tom offers to read it on a call', say: 'Tom, can you do the voices?', set: 'kidname', p: 4, v: 8,
+          re: [['tom', 'Gather round, little one…'], ['mork', "he's actually brilliant at this"]], msg: "The kid asks for Tom again. Tom promises to 'remember his name'." },
+        { label: 'Tell him to read the short one', say: 'Read the short one.', p: 8, v: -3, t: 15, re: [['mork', 'there is no short one Don']], msg: 'There is a short one.' }
       ] },
     { id: 'partner', who: ['mork'],
       title: 'The dishwasher clause',
-      text: "Mork can play 'once the dishwasher's done'. The dishwasher is a full-time job.",
+      chat: [['mork', "can play once the dishwasher's done"], ['mork', "the dishwasher is never done"]],
       choices: [
         { label: 'Help him load it over video', sub: 'Mini-game: tap the plates', game: 'dishes',
-          ok: { p: 14, v: 5, msg: "Done. He shuts the door like he's closing a vault. 'Right. Give me ten minutes.'" },
-          bad: { p: 4, v: -2, t: 15, msg: "He's still going. You can hear the cutlery drawer from here." } },
-        { label: 'Remind him nothing interrupts him once he is in', p: 5, v: 4, msg: "He perks up. It's true: once he's in, he's in. Phone goes in a drawer." },
-        { label: 'Tell him to leave it', p: 10, v: -6, msg: "He leaves it. Tomorrow he'll regret this. Tomorrow isn't tonight." }
+          ok: { p: 14, v: 5, re: [['mork', 'right. ten minutes']], msg: "He shuts the door like he's closing a vault." },
+          bad: { p: 4, v: -2, t: 15, re: [['mork', 'still going']], msg: 'You can hear the cutlery drawer from here.' } },
+        { label: 'Remind him nothing gets through once he is in', say: "Once you're in, nothing gets you. Phone in a drawer.", p: 5, v: 4,
+          re: [['mork', '…true actually']] },
+        { label: 'Tell him to leave it', say: 'Leave it, mate.', p: 10, v: -6, re: [['mork', 'tomorrow-me is going to hate you']] }
+      ] },
+    { id: 'headset', who: ['mork'],
+      title: 'Where is the headset',
+      chat: [['mork', "can't find my headset"], ['mork', 'looked everywhere']],
+      choices: [
+        { label: 'Suggest the kid\'s toy box', say: "Check the toy box.", p: 10, v: 2, re: [['mork', "found it. how did you know"]], msg: "You didn't. It's just where everything ends up." },
+        { label: 'Suggest earbuds', say: 'Just use earbuds.', p: 4, v: 0, re: [['mork', 'one of them is chewed']], msg: 'Technically a solution.' }
+      ] },
+    { id: 'voicenote', who: ['mork'],
+      title: 'A voice note from Mork',
+      chat: [['mork', '🎤 Voice message (4:12)']],
+      text: 'Mork has never sent a voice note in his life.',
+      choices: [
+        { label: 'Listen to all of it', p: 8, v: 4, t: 15, msg: "Mostly him walking. At 3:50 he says 'see you at half seven'. That's the whole thing." },
+        { label: "Send 'tl;dr?'", say: 'tl;dr?', p: 4, v: -2, re: [['mork', 'tl;dr: yes']] }
       ] },
     { id: 'easy', who: ['don'],
       title: 'What time are we starting?',
-      text: "Mork says 'whenever'. Tom says 'now'. They're both looking at you.",
+      chat: [['mork', 'whenever'], ['tom', 'NOW']],
+      text: 'Both are waiting for Don.',
       choices: [
-        { label: "'I'm easy.'", p: 2, v: -2, t: 15, easy: 1, msg: "Fifteen minutes go by. Nobody picks a time." },
-        { label: "'7:30. Like always.'", p: 8, v: -2, msg: "A decision, from Don. Everyone is a bit thrown, and a bit impressed." }
+        { label: "Say you're easy", say: "I'm easy.", p: 2, v: -2, t: 15, easy: 1, msg: 'Fifteen minutes pass. Nobody picks a time.' },
+        { label: 'Say 7:30', say: '7:30. Like always.', p: 8, v: -2, re: [['tom', "…who are you and what have you done with Don"]] }
       ] },
     { id: 'maybe', who: ['mork'],
       title: "Mork says 'maybe'",
-      text: "Mork's 'maybe' comes good about 40% of the time. The other 60%, he's fallen asleep.",
+      chat: [['mork', 'maybe']],
+      text: "His maybes come good about 40% of the time. The rest he falls asleep.",
       choices: [
-        { label: 'Accept the maybe', p: 3, v: 0, maybes: 1, msg: "You put his name down in pencil. Very light pencil." },
-        { label: 'Send a beer emoji', p: 6, v: 3, maybes: 1, msg: "One beer emoji. It does more than the four paragraphs did." }
+        { label: 'Accept the maybe', say: "Maybe's fine.", p: 3, v: 0, maybes: 1, msg: 'You pencil him in. Very light pencil.' },
+        { label: 'Send a beer emoji', say: '🍺', p: 6, v: 3, maybes: 1, re: [['mork', '🍺'], ['mork', 'ok maybe is a yes']] }
+      ] },
+    { id: 'update', who: ['don'],
+      title: 'The update',
+      chat: [['sys', 'PS5: system update required (38 GB)'], ['sys', 'Estimated time: 2 hours 40 minutes']],
+      text: "Your console. Of course it's your console.",
+      choices: [
+        { label: 'Restart the console', sub: 'Risky', risk: 0.5,
+          ok: { p: 6, v: 4, re: [['sys', 'Update complete']], msg: 'It works. Nobody knows why.' },
+          bad: { p: 0, v: -3, t: 15, re: [['sys', 'Update required (38 GB)']], msg: 'Back to the start.' } },
+        { label: 'Blame the router', say: "It's the router.", p: 0, v: 3, re: [['tom', "It's always the router"]], msg: 'Tom blames the router for most things.' }
       ] },
     { id: 'calm', who: ['tom'],
       title: 'Tom is far too excited',
-      text: "'Tonight's going to be the best night in history.' He's made a playlist. He's made a banner. Someone has to calm him down.",
+      chat: [['tom', 'TONIGHT IS GOING TO BE THE BEST NIGHT IN HISTORY'], ['tom', 'I made a playlist. And a banner.']],
       choices: [
         { label: 'Calm Tom down', sub: 'Mini-game: hold and release', game: 'breathe',
-          ok: { p: 2, v: 10, msg: "Tom breathes out. He takes the banner down and folds it. 'For later,' he says." },
-          bad: { p: 0, v: 1, msg: "Tom breathes very fast and very keenly, and calls it a warm-up." } },
-        { label: 'Let him run with it', p: -4, v: -6, msg: "The hype builds. Then a speech. It's about destiny." }
+          ok: { p: 2, v: 10, set: 'banner', re: [['tom', "…you're right. Breathe."]], msg: "He folds the banner up carefully. 'For later.'" },
+          bad: { p: 0, v: 1, re: [['tom', 'warming up!!']], msg: 'Tom breathes very fast and very keenly.' } },
+        { label: 'Let him run with it', p: -4, v: -6, re: [['tom', 'A SPEECH:']], msg: 'It is about destiny.' }
+      ] },
+    { id: 'sermon', who: ['tom'],
+      title: 'Tom has called a meeting',
+      chat: [['tom', 'Brothers. A thought.'], ['tom', 'What if the game is a metaphor?']],
+      text: 'Nobody asked for a meeting.',
+      choices: [
+        { label: 'Hear him out', say: 'Go on then.', p: -2, v: 6, t: 15, msg: "Forty minutes later you're agreeing with him, somehow." },
+        { label: 'Ask him to chop something instead', say: 'Go chop something, mate.', p: 2, v: 4, re: [['tom', '…yes. Trees. Always trees.']] }
+      ] },
+    { id: 'tomgame', who: ['tom'],
+      title: 'Tom has made a game',
+      chat: [['tom', "Little thing. I've made a game. It's about friendship."], ['tom', 'Playtest it?']],
+      text: "It's 800 MB and has one level: a forest.",
+      choices: [
+        { label: 'Playtest it', say: 'Send me the build.', p: -2, v: 8, t: 15, re: [['tom', 'Be honest. Be kind. Be honest.']], msg: "It's a tree-chopping game. It's good. That's the worst part." },
+        { label: 'Not now', say: 'After the match, mate.', p: 4, v: -2, re: [['tom', 'Of course. Of course.']], msg: 'He says it three times, quieter each time.' }
+      ] },
+    { id: 'stream', who: ['tom'],
+      title: 'Tom is live',
+      chat: [['tom', 'going live!! 🔴'], ['sys', 'Viewers: 1']],
+      text: 'The one viewer is his mum.',
+      choices: [
+        { label: 'Join the stream', p: 0, v: 8, re: [['tom', 'Welcome Don!! Chat, say hi to Don!'], ['sys', 'Tom\'s mum: hi Don']] },
+        { label: 'Mute it', p: 2, v: -2, msg: 'You mute it. Tom can tell.' }
       ] },
     { id: 'chop', who: ['tom'], chop: true,
-      title: 'Tom is chopping a tree',
-      text: "Tom's in the lobby, chopping a tree. He's been at it three hours. 'Just warming up,' he says.",
+      title: 'Tom is chopping trees',
+      chat: [['tom', 'found a really good forest. back soon!']],
+      text: "He's logged in early and is chopping alone in the game. Been at it since two.",
       choices: [
         { label: 'Join him', sub: 'Mini-game: Timber!', game: 'timber',
-          ok: { p: 4, v: 12, msg: "Two grown men, one tree, total silence. Best part of the night." },
+          ok: { p: 4, v: 12, msg: 'Two grown men, one tree, total silence. Best part of the night.' },
           bad: { p: 0, v: 3, msg: "Tom out-chops you and says nothing. He doesn't need to." } },
-        { label: 'Leave him to it', p: 0, v: 2, easy: 1, msg: "You're very relaxed about it. The tree is not." }
+        { label: 'Leave him to it', p: 0, v: 2, easy: 1, msg: "You're relaxed about it. The tree isn't." }
       ] },
     { id: 'generous', who: ['tom', 'mork'],
       title: "Tom paid for Mork's PS Plus",
-      text: "A whole year, no reason given. Tom's one of the nicest people alive. There's also a non-zero chance this isn't what it looks like.",
+      chat: [['tom', 'Mork is now on PS Plus for a year. You are welcome.'], ['tom', "No no, don't thank me"]],
+      text: "Tom is one of the nicest people alive. There's also a non-zero chance this isn't what it looks like.",
       choices: [
-        { label: 'Thank him', p: 8, v: 8, msg: "Mork's nearly in tears. Tom waves it off, then asks for Mork's login. 'To check the renewal.'" },
-        { label: 'Ask what the catch is', p: 2, v: -2, steals: 1, msg: "'There's no catch.' The gift card came from somewhere. Tom is already talking about something else." }
+        { label: 'Thank him', say: 'Tom. Mate. That is incredibly kind.', set: 'login', p: 8, v: 8,
+          re: [['tom', "Anything for my friends. Quick thing: what's Mork's login? For the renewal."]] },
+        { label: 'Ask what the catch is', say: "What's the catch?", p: 2, v: -2, steals: 1,
+          re: [['tom', 'No catch!'], ['tom', "Gift card. Don't ask where from."]] }
       ] },
     { id: 'steal', who: ['tom'],
       title: 'That sword was yours',
-      text: "A legendary sword drops and you grab it. You look away for a second. It's in Tom's inventory. 'Safekeeping,' he says, warmly.",
+      chat: [['sys', 'Legendary Sword picked up by DON'], ['sys', "Legendary Sword is now in TOM's inventory"], ['tom', 'Safekeeping :)']],
       choices: [
-        { label: 'Let it slide', p: 3, v: 3, steals: 1, easy: 1, msg: "You're chill about it. He gives you three smaller swords by way of apology. It isn't even." },
+        { label: 'Let it slide', say: 'Fine, keep it.', set: 'swords', p: 3, v: 3, steals: 1, easy: 1,
+          re: [['tom', 'Here. Three smaller swords. As an apology.']], msg: "It isn't even." },
         { label: 'Grab it back', sub: 'Mini-game: reaction', game: 'grab',
-          ok: { p: 10, v: 2, msg: "He hands it over at once, thrilled for you. Almost too thrilled." },
-          bad: { p: 0, v: -8, t: 15, steals: 1, msg: "He thanks you for the sword, hugs you, and is gone. You're not sure who won." } }
+          ok: { p: 10, v: 2, re: [['tom', "Of course!! It's yours!"]], msg: 'Almost too thrilled for you.' },
+          bad: { p: 0, v: -8, t: 15, steals: 1, re: [['tom', 'Thank you for the sword!! ❤️']], msg: "He hugs you and is gone. You're not sure who won." } }
       ] },
     { id: 'inventory', who: ['tom', 'mork'],
       title: "Tom is 'looking after' Mork's stuff",
-      text: "Forty of Mork's items are in Tom's inventory 'for safekeeping'. Mork hasn't noticed. Tom looks like a man doing a good deed.",
+      chat: [["tom", "Don't worry about Mork's things. I'm looking after them."], ['tom', 'All forty items. Perfectly safe.']],
+      text: "Mork hasn't noticed.",
       choices: [
-        { label: 'Trust Tom', p: 2, v: 4, steals: 1, easy: 1, msg: "Of course. He's one of the nicest people alive. You think about it for longer than you'd like." },
-        { label: 'Ask for an inventory', p: 6, v: -4, msg: "A spreadsheet arrives within the minute. It's very thorough, and it doesn't add up." }
+        { label: 'Trust Tom', say: 'Cheers Tom.', p: 2, v: 4, steals: 1, easy: 1, re: [['tom', '❤️']], msg: "You think about it longer than you'd like." },
+        { label: 'Ask for a list', say: 'Send me a list.', p: 6, v: -4, re: [['tom', '[inventory.xlsx]']], msg: "Very thorough. Doesn't add up." }
       ] },
     { id: 'pizza', who: ['don', 'tom', 'mork'],
       title: 'Order Mork a pizza',
-      text: "You can order a pizza straight to Mork's door. Not strictly allowed. Not strictly forbidden either.",
+      chat: [['tom', "Can we send a pizza to Mork's door? Is that allowed?"]],
+      text: 'Not strictly allowed. Not strictly forbidden.',
       choices: [
-        { label: 'Order it', p: 8, v: 8, msg: "His kid loves you for ten minutes. Mork loves you for longer." },
-        { label: 'Pizza for the whole chat', p: 4, v: 12, t: 15, msg: "Three pizzas, three doors, one order. A rare moment of teamwork." }
+        { label: 'Order one for Mork', p: 8, v: 8, re: [['mork', 'DON.'], ['mork', '(thank you)']], msg: 'His kid loves you for ten minutes. Mork loves you for longer.' },
+        { label: 'Pizza for the whole chat', p: 4, v: 12, t: 15, msg: 'Three pizzas, three doors, one order. Rare teamwork.' }
       ] },
     { id: 'kidsasleep', who: ['mork'], lucky: true,
       title: 'The kid is asleep',
-      text: "A miracle: his kid's asleep before 7. Mork sends one message: 'Do not speak to me. On my way.'",
+      chat: [['mork', 'kid is ASLEEP'], ['mork', 'do not speak to me. on my way']],
       choices: [
-        { label: 'Send nothing. Hold your breath.', p: 25, v: 8, msg: "Even Tom stays quiet. For a full minute, nobody types." }
+        { label: 'Send nothing. Hold your breath.', p: 25, v: 8, re: [['sys', 'Tom is typing…'], ['sys', '(stopped)']], msg: 'Even Tom stays quiet.' }
       ] },
     { id: 'tomback', who: ['tom'],
       title: 'Tom is back',
-      text: "Three weeks. No messages, no explanation. Now he's online with a tan, a new watch and a calm you don't trust. 'It was a retreat,' he says.",
+      chat: [['tom', 'Hey all! Back!'], ['tom', 'Was on a retreat.']],
+      text: "Three weeks. No messages. He's online with a tan, a new watch and a calm you don't trust.",
       choices: [
-        { label: 'Ask where he really was', p: 0, v: -4, msg: "'A retreat.' He says it again, completely straight. The watch is from a shop in Geneva." },
-        { label: "Don't ask", p: 2, v: 4, easy: 1, msg: "You don't ask. It's most of why you're still friends." }
+        { label: 'Ask where he really was', say: 'Where were you, really?', p: 0, v: -4, re: [['tom', 'A retreat.'], ['tom', 'A very good retreat.']], msg: 'The watch is from a shop in Geneva.' },
+        { label: "Don't ask", say: 'Good to have you back.', p: 2, v: 4, easy: 1, msg: "It's most of why you're still friends." }
       ] },
     { id: 'tomgone', who: ['tom'],
       title: 'Tom has gone quiet',
-      text: "Mid-chat, Tom stops replying. 'Last seen 4 minutes ago', for twenty minutes. It's happened before. Last time it lasted three weeks.",
+      chat: [['sys', 'Tom: last seen 4 minutes ago']],
+      text: "It's been 20 minutes. This has happened before. Last time it lasted three weeks.",
       choices: [
-        { label: 'Wait. He always comes back', p: 2, v: 0, t: 15, easy: 1, msg: "He's back with 'sorry, signal'. There was no signal for all of Tuesday." },
-        { label: "Message: 'you ok?'", p: 0, v: 3, msg: "'Fine. Away.' He doesn't say from what, or to where." }
+        { label: 'Wait. He always comes back', p: 2, v: 0, t: 15, easy: 1, re: [['tom', 'sorry, signal']], msg: 'There was no signal for all of Tuesday.' },
+        { label: "Ask if he's ok", say: 'you ok?', p: 0, v: 3, re: [['tom', 'Fine. Away.']], msg: "He doesn't say from what, or to where." }
+      ] },
+
+    // callbacks: these only show up once an earlier choice has set the flag
+    { id: 'banner', req: 'banner', who: ['tom'],
+      title: 'The banner',
+      chat: [['tom', "It's time for the banner."]],
+      text: 'The folded banner returns.',
+      choices: [
+        { label: 'Let him unfurl it', p: -2, v: 8, re: [['mork', "…it says WELCOME MORK. that's actually nice"]], msg: 'The banner is eleven feet long.' },
+        { label: 'Ask him to wait for Mork', say: 'Save it for when Mork is in.', p: 4, v: 4, re: [['tom', 'Patience. That is the lesson.']] }
+      ] },
+    { id: 'kidpic', req: 'kidname', who: ['mork', 'tom'],
+      title: 'A picture from the kid',
+      chat: [['mork', 'kid drew a picture'], ['mork', "it's Tom. with an axe. says it's 'Uncle Tom, the tree man'"]],
+      choices: [
+        { label: 'Show Tom', say: '[photo: a stick man with a very large axe]', p: 6, v: 10, re: [['tom', "I'm going to cry."]], msg: 'Tom is quiet for six whole minutes.' },
+        { label: 'Keep it quiet', p: 4, v: 0, msg: "You don't want to be responsible for what Tom does next." }
+      ] },
+    { id: 'smallswords', req: 'swords', who: ['tom', 'mork'],
+      title: 'About those swords',
+      chat: [['mork', 'where did my three swords go'], ['tom', "I don't know. Don, did you get any?"]],
+      text: "The smaller swords. He gave you Mork's.",
+      choices: [
+        { label: 'Say nothing', p: 4, v: 4, steals: 1, msg: "You say nothing. This makes you part of it." },
+        { label: 'Give them back', say: "I think I've got them, sorry.", p: 6, v: -2, re: [['mork', 'ok. thanks']], msg: "Tom does not comment, but he writes something down." }
+      ] },
+    { id: 'login', req: 'login', who: ['mork', 'tom'],
+      title: 'A sign-in alert',
+      chat: [['sys', "New sign-in on Mork's account: Geneva, Switzerland"], ['mork', 'why is someone logging in from switzerland']],
+      text: "The renewal check.",
+      choices: [
+        { label: 'Blame the VPN', say: "That'll be a VPN thing.", p: 4, v: 2, re: [['tom', 'VPN. Definitely.']] },
+        { label: 'Ask Tom nicely', say: 'Tom. Mate.', p: 8, v: -2, steals: 1, re: [['tom', "Fine. It's a shared account now. In spirit."]] }
       ] }
   ];
 
@@ -248,7 +365,7 @@
     var day = DAYS[dayKey];
     return { dayKey: dayKey, day: day, clock: START, leaveAt: START + WINDOW_MIN, shifts: 0,
       progress: 0, vibes: 40, pool: [], ev: null, phase: 'event', result: null, ending: null, started: false,
-      stats: { trees: 0, steals: 0, maybes: 0, easy: 0, lostMin: 0, miniPlayed: 0, miniWon: 0 } };
+      flags: {}, stats: { trees: 0, steals: 0, maybes: 0, easy: 0, lostMin: 0, miniPlayed: 0, miniWon: 0 } };
   }
 
   function fmtClock(m) {
@@ -260,11 +377,17 @@
 
   function pickEvent() {
     if (!g.started) { g.started = true; return EVENTS.filter(function (e) { return e.first; })[0]; }
-    if (!g.pool.length) g.pool = EVENTS.filter(function (e) { return !e.first; }).map(function (e) { return e.id; });
-    var cand = g.pool.map(function (id) { return EVENTS.filter(function (e) { return e.id === id; })[0]; });
+    function byId(id) { return EVENTS.filter(function (e) { return e.id === id; })[0]; }
+    function ok(e) { return !e.req || g.flags[e.req]; }
+    var cand = g.pool.map(byId).filter(ok);
+    if (!cand.length) {
+      g.pool = EVENTS.filter(function (e) { return !e.first; }).map(function (e) { return e.id; });
+      cand = g.pool.map(byId).filter(ok);
+    }
     var weights = cand.map(function (e) {
       var w = e.lucky ? 0.5 : 1;
       if (e.work) w *= g.day.workWeight;
+      if (e.req) w *= 4; // callbacks should actually land
       return w;
     });
     var total = weights.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * total, i = 0;
@@ -275,7 +398,7 @@
 
   // where Mork is, as the evening wears on
   function morkStatus() {
-    if (g && g.ending === 'win') return 'IN THE LOBBY';
+    if (g && g.ending === 'win') return 'ONLINE';
     if (g && g.ending === 'late') return 'ASLEEP, PAD IN HAND';
     if (g && g.ending === 'noshow') return 'ASLEEP';
     var m = g ? g.clock - START : 0;
@@ -346,7 +469,7 @@
     'COMMUTING': ['On the train. Signal is a rumour.', 'Nearly home. Ish.'],
     'DINNER + BATHS': ['Chicken dipper situation.', 'Someone is wearing the bath.', 'Hands full. Literally.'],
     'BEDTIME': ['One more story. Then I am yours.', "Shh. He's nearly off.", 'The short one. There is no short one.'],
-    'IN THE LOBBY': ['…', '(headset on, cannot hear you)', 'Locked in. Do not speak.'],
+    'ONLINE': ['…', '(headset on, cannot hear you)', 'Locked in. Do not speak.'],
     'ASLEEP, PAD IN HAND': ['zzz…', '*presses X in his sleep*'],
     'ASLEEP': ['zzz…', '(seen, 11:48 PM)']
   };
@@ -412,8 +535,8 @@
     var found = endingsFound().length;
     elCard.innerHTML =
       '<h2>WHERE\'S MORK?</h2>' +
-      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom is online for the first time in three weeks. He's one of the nicest men alive, and there's a non-zero chance he's robbing you. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no work, no interruptions. Getting him there is the hard part. You're Don. You're easy.</p>" +
-      '<p>Some choices are mini-games. Poke the gang on the sofa any time.</p>' +
+      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom is online for the first time in three weeks. He's one of the nicest men alive, and there's a non-zero chance he's robbing you. Mork is the busiest man you know, but once he's online nothing gets through: no calls, no work, no interruptions. Getting him there is the hard part. You're Don. You're easy.</p>" +
+      '<p>Some choices are mini-games. Tom never forgets a favour. Poke the gang on the sofa any time.</p>' +
       '<div class="gn-choices">' +
         '<button class="gn-btn" data-key="1" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
         '<button class="gn-btn" data-key="2" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
@@ -425,11 +548,19 @@
     var ev = g.ev;
     setActors(ev);
     renderMeters();
-    var html = '<h2>' + esc(ev.title) + '</h2><p>' + esc(ev.text) + '</p><div class="gn-choices">';
+    var html = '<h2>' + esc(ev.title) + '</h2>' + bubbles(ev.chat) + (ev.text ? '<p class="gn-nar">' + esc(ev.text) + '</p>' : '') + '<div class="gn-choices">';
     ev.choices.forEach(function (c, i) {
       html += '<button class="gn-btn" data-key="' + (i + 1) + '" data-choice="' + i + '">' + esc(c.label) + (c.sub ? '<small>' + esc(c.sub) + '</small>' : '') + '</button>';
     });
     elCard.innerHTML = html + '</div>';
+  }
+
+  var NAMES = { don: 'Don', tom: 'Tom', mork: 'Mork', sys: '' };
+  function bubbles(list) {
+    if (!list || !list.length) return '';
+    return '<div class="gn-chat">' + list.map(function (m) {
+      return '<div class="gn-msg gn-msg-' + m[0] + '">' + (NAMES[m[0]] ? '<b>' + NAMES[m[0]] + '</b>' : '') + '<span>' + esc(m[1]) + '</span></div>';
+    }).join('') + '</div>';
   }
 
   function chip(label, val, goodWhenPositive) {
@@ -448,8 +579,9 @@
     elCard.innerHTML =
       '<h2>' + esc(g.ev.title) + '</h2>' +
       (r.mini && r.mini.note ? '<p class="gn-note">' + esc(r.mini.note) + '</p>' : '') +
-      '<p>' + esc(r.msg) + '</p>' +
-      '<p>' + esc(r.trees) + '</p>' +
+      bubbles((r.say ? [['don', r.say]] : []).concat(r.re || [])) +
+      (r.msg ? '<p class="gn-nar">' + esc(r.msg) + '</p>' : '') +
+      '<p class="gn-aside">' + esc(r.trees) + '</p>' +
       '<div class="gn-chips">' + chips + '</div>' +
       '<button class="gn-btn gn-go" data-next="1">CONTINUE</button>';
     floatDelta(elVibes.parentNode, r.v);
@@ -477,6 +609,10 @@
     noshow: ['NO MORK', function () {
       return 'No reply, no message. Mork is asleep on a sofa somewhere, and probably happier for it. You and Tom play as a pair while Tom explains trees for three hours. See you ' + g.day.next + '.';
     }],
+    heist: ['TOM HAS LEFT THE PARTY', function () {
+      return "Around eight, Tom's status changes to 'Away'. Your inventory is lighter. So is Mork's. The last message in the chat is a photo of a beach. " +
+        (g.morkIn ? 'Mork is online and has noticed nothing. ' : '') + "He'll be back in about three weeks with a tan. 'A retreat,' he'll say.";
+    }],
     rage: ["TOM COULDN'T WAIT", function () {
       return "The mood collapsed. Tom, far too wound up, started without Mork, then spent three hours apologising to a man who was asleep and not remotely upset.";
     }]
@@ -497,6 +633,9 @@
       st.miniPlayed === 0 ? 'Mini-games played: <b>none</b>. Very Don.' : 'Mini-games won: <b>' + st.miniWon + ' / ' + st.miniPlayed + '</b>',
       st.easy === 0 ? 'Don decided things. <b>Out of character.</b>' : "Don was 'easy' about it <b>" + st.easy + '</b> time' + (st.easy === 1 ? '' : 's')
     ];
+    var rank = g.ending === 'heist' ? "Tom's accomplice (unwitting)" : st.miniWon >= 3 ? 'Mini-game menace' : st.easy >= 3 ? 'Chief Easy Officer' :
+      g.ending === 'win' && st.easy === 0 ? 'Decisive. Suspiciously.' : g.ending === 'win' ? 'Reasonably chill' : g.ending === 'rage' ? 'Tom wrangler (failed)' : 'Easy';
+    lines.push('Don is now: <b>' + rank + '</b>');
     elCard.setAttribute('data-ending', g.ending);
     elCard.innerHTML =
       '<h2>' + v[0] + '</h2><p>' + v[1]() + '</p>' +
@@ -515,19 +654,21 @@
     g.vibes = clamp(g.vibes + v, 0, 100);
     g.clock += mins;
     if (o.d && g.shifts < 2) { g.leaveAt += o.d; g.shifts++; }
+    if (o.set) g.flags[o.set] = 1;
     g.stats.steals += o.steals || 0;
     g.stats.maybes += o.maybes || 0;
     g.stats.easy += o.easy || 0;
     g.stats.lostMin += o.t || 0;
     var trees = 1 + Math.floor(Math.random() * 4);
     g.stats.trees += trees;
-    var aside = 'Meanwhile, Tom fells ' + trees + ' tree' + (trees === 1 ? '' : 's') + ' in the lobby.';
+    var aside = 'Meanwhile, Tom fells ' + trees + ' tree' + (trees === 1 ? '' : 's') + ' in the game.';
     if (Math.random() < 0.2) aside = TOM_RUMOURS[Math.floor(Math.random() * TOM_RUMOURS.length)];
-    return { p: p, v: v, d: o.d || 0, mins: mins, msg: o.msg, trees: aside };
+    return { p: p, v: v, d: o.d || 0, mins: mins, msg: o.msg, re: o.re, trees: aside };
   }
 
-  function resolve(outcome, mini) {
+  function resolve(outcome, mini, say) {
     g.result = applyEffects(outcome);
+    g.result.say = say || '';
     g.result.mini = mini || null;
     g.phase = 'result';
     renderResult();
@@ -537,16 +678,20 @@
     var c = g.ev.choices[i];
     if (!c) return;
     if (c.game) { startMini(c); return; }
-    if (c.risk) { resolve(Math.random() < c.risk ? c.ok : c.bad); return; }
-    resolve(c);
+    if (c.risk) { resolve(Math.random() < c.risk ? c.ok : c.bad, null, c.say); return; }
+    resolve(c, null, c.say);
   }
 
   function nextRound() {
-    if (g.progress >= 100) { g.ending = 'win'; renderEnd(); return; }
-    if (g.vibes <= 0) { g.ending = 'rage'; renderEnd(); return; }
-    if (g.clock >= g.leaveAt) {
-      g.ending = g.progress >= WIN_READY ? 'win' : g.progress >= LATE_READY ? 'late' : 'noshow';
+    function finish(key) {
+      g.morkIn = g.progress >= WIN_READY;
+      g.ending = g.stats.steals >= 3 && key !== 'rage' ? 'heist' : key;
       renderEnd();
+    }
+    if (g.progress >= 100) { finish('win'); return; }
+    if (g.vibes <= 0) { finish('rage'); return; }
+    if (g.clock >= g.leaveAt) {
+      finish(g.progress >= WIN_READY ? 'win' : g.progress >= LATE_READY ? 'late' : 'noshow');
       return;
     }
     g.ev = pickEvent();
@@ -572,7 +717,7 @@
       mini = null;
       g.stats.miniPlayed++;
       if (win) g.stats.miniWon++;
-      resolve(win ? choice.ok : choice.bad, { win: win, note: note || '' });
+      resolve(win ? choice.ok : choice.bad, { win: win, note: note || '' }, choice.say);
     });
   }
 
