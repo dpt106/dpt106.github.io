@@ -2,6 +2,7 @@
    You are Don. Get the busiest man in the group online before the session
    starts, keep the vibes up, and try not to be the one who decides anything.
    Once Mork is in he is fully locked in, so the whole fight is the lead-up.
+   Some choices launch a mini-game, and the gang on the sofa can be poked.
    Rendered into #gamenight. */
 (function () {
   'use strict';
@@ -81,6 +82,10 @@
   };
 
   // group-chat phone shown at the top of the "TV"
+  var SWORD = [
+    '.......ww', '......wsw', '.....wsw.', '....wsw..', '.y.wsw...', '..ysw....', '..byy....', '.b...y...', 'b........'
+  ];
+
   var PHONE = [
     '.kkkkkk.', 'kwwwwwwk', 'kwggggwk', 'kwwwwwwk', 'kwwwbbwk', 'kwwwwwwk', 'kwggwwwk', 'kwwwwwwk', 'kwwwwwwk', 'kkkkkkkk'
   ];
@@ -94,137 +99,145 @@
   var EVENTS = [
     { id: 'ping', first: true, who: ['don', 'tom'],
       title: '5:30 PM. The group chat',
-      text: "Two hours to kick-off, the usual notice. Tom has been online since two. Mork has not been seen since breakfast. Someone has to send the invite.",
+      text: "Two hours to kick-off. Tom has been online since two. Mork hasn't been seen since breakfast. Somebody has to send the invite, and it won't be Mork.",
       choices: [
-        { label: 'Send the casual invite', p: 8, v: 2, msg: "'You in tonight?' Tom replies in four seconds. Mork replies by giving Tom's message a thumbs-up." },
-        { label: 'Let Tom write it', p: -2, v: 8, msg: "It's called 'The Gathering'. It is four paragraphs and uses the word 'destiny'. Mork will need time to read it." }
+        { label: 'Send the casual invite', p: 8, v: 2, msg: "You send: 'You in tonight?' Tom replies in four seconds. Mork gives Tom's reply a thumbs-up." },
+        { label: 'Let Tom write it', p: -2, v: 8, msg: "He calls it 'The Gathering'. Four paragraphs, and the word 'destiny' twice. Mork will need time to read it." }
       ] },
     { id: 'seen', who: ['mork'],
       title: 'Mork has read it',
-      text: 'Two blue ticks. Nothing else. This is not unusual, and it is also not a yes.',
+      text: "Two blue ticks, and nothing else. That's normal for Mork. It's also not a yes.",
       choices: [
-        { label: 'Wait', p: 2, v: 0, easy: 1, msg: 'You wait. The two ticks sit there like a pair of tiny, accusing eyes.' },
-        { label: 'Send a gif', p: 5, v: 4, msg: 'Mork responds with a single laughing emoji. An advance.' }
+        { label: 'Wait', p: 2, v: 0, easy: 1, msg: 'You wait. The two ticks stare back at you.' },
+        { label: 'Send a gif', p: 5, v: 4, msg: "Mork replies with one laughing emoji. For Mork, that's progress." },
+        { label: "Catch him while he's typing", sub: 'Mini-game: timing', game: 'typing',
+          ok: { p: 12, v: 4, msg: "'ok yeah go on then.' Four words. From Mork, that's a speech." },
+          bad: { p: 0, v: -3, msg: "'Typing…' appears, then vanishes. Nothing arrives. Probably a work email." } }
       ] },
     { id: 'work', who: ['mork'], work: true,
       title: 'Mork is stuck at work',
-      text: "'Just finishing something.' The something has no end. It's 5:50.",
+      text: "'Just finishing something.' It's 5:50. He said that at 5:15 as well.",
       choices: [
-        { label: 'Offer to push kick-off to 8:00', p: 12, v: -3, d: 30, msg: "Tom agrees at once, and says he'll use the extra time to 'prepare'. Prepare what, he doesn't say." },
-        { label: "Tell him we'll hold his seat", p: 6, v: 3, msg: "It's a small thing. He feels it more than he lets on." }
+        { label: 'Offer to push kick-off to 8:00', p: 12, v: -3, d: 30, msg: "Tom agrees instantly. He'll use the extra half hour to 'prepare'. He doesn't say what for." },
+        { label: "Tell him we'll hold his seat", p: 6, v: 3, msg: "'Cheers, mate.' Small thing. He'll remember it." }
       ] },
     { id: 'dinner', who: ['mork'],
-      title: "Mork is doing his kid's dinner",
-      text: 'He sends one photo of a plate of chicken dippers. No caption. It is a cry for help.',
+      title: "Mork is on kid's dinner",
+      text: "He sends one photo: a plate of chicken dippers. No caption. You've never seen a clearer cry for help.",
       choices: [
-        { label: 'Suggest takeaway', p: 8, v: -2, msg: "'Great shout.' He orders in under a minute. The man is a machine." },
-        { label: 'Leave him to it', p: 2, v: 2, msg: 'The dinner is handled, eventually, in silence.' }
+        { label: 'Suggest takeaway', p: 8, v: -2, msg: "'Good shout.' Ordered within the minute. The man gets things done." },
+        { label: 'Leave him to it', p: 2, v: 2, msg: 'Dinner happens eventually. Nobody says anything.' }
       ] },
     { id: 'bedtime', who: ['mork', 'tom'],
-      title: 'Bedtime stories',
+      title: 'Bedtime story',
       text: "Mork's kid wants 'one more'. Mork has read this book six times this week.",
       choices: [
-        { label: 'Tom offers to read it over a call', p: 4, v: 8, msg: "Tom is wonderful at it. Mork's kid asks for him back. He asks the kid to 'remember his name'. For later." },
-        { label: 'Tell him to read the short one', p: 8, v: -3, t: 15, msg: "'There's no short one, Don.' There's a short one." }
+        { label: 'Tom offers to read it on a call', p: 4, v: 8, msg: "Tom is brilliant at it, all the voices. The kid asks for him again. Tom says to 'remember his name'. For later." },
+        { label: 'Tell him to read the short one', p: 8, v: -3, t: 15, msg: "'There is no short one, Don.' There is a short one." }
       ] },
     { id: 'partner', who: ['mork'],
       title: 'The dishwasher clause',
-      text: "Mork can game 'if the dishwasher is done'. The dishwasher is currently a full time job.",
+      text: "Mork can play 'once the dishwasher's done'. The dishwasher is a full-time job.",
       choices: [
-        { label: 'Remind him nothing interrupts him once he is in', p: 5, v: 4, msg: "He brightens: it's true. When he's in, he's in. Phone in a drawer." },
-        { label: 'Tell him to leave it', p: 10, v: -6, msg: "He leaves it. Tomorrow he will think about this. Tomorrow isn't tonight." }
+        { label: 'Help him load it over video', sub: 'Mini-game: tap the plates', game: 'dishes',
+          ok: { p: 14, v: 5, msg: "Done. He shuts the door like he's closing a vault. 'Right. Give me ten minutes.'" },
+          bad: { p: 4, v: -2, t: 15, msg: "He's still going. You can hear the cutlery drawer from here." } },
+        { label: 'Remind him nothing interrupts him once he is in', p: 5, v: 4, msg: "He perks up. It's true: once he's in, he's in. Phone goes in a drawer." },
+        { label: 'Tell him to leave it', p: 10, v: -6, msg: "He leaves it. Tomorrow he'll regret this. Tomorrow isn't tonight." }
       ] },
     { id: 'easy', who: ['don'],
-      title: 'What time are we actually starting?',
-      text: 'Mork says whenever. Tom says now. Everybody waits for Don to confirm something.',
+      title: 'What time are we starting?',
+      text: "Mork says 'whenever'. Tom says 'now'. They're both looking at you.",
       choices: [
-        { label: "'I'm easy.'", p: 2, v: -2, t: 15, easy: 1, msg: 'Fifteen minutes pass. Nobody picks a time.' },
-        { label: "'7:30. Like always.'", p: 8, v: -2, msg: 'A decision. Out of character. Everyone is unsettled and, quietly, impressed.' }
+        { label: "'I'm easy.'", p: 2, v: -2, t: 15, easy: 1, msg: "Fifteen minutes go by. Nobody picks a time." },
+        { label: "'7:30. Like always.'", p: 8, v: -2, msg: "A decision, from Don. Everyone is a bit thrown, and a bit impressed." }
       ] },
     { id: 'maybe', who: ['mork'],
       title: "Mork says 'maybe'",
-      text: "Mork's 'maybe' has a success rate of about 40%. He is either joining or has fallen asleep.",
+      text: "Mork's 'maybe' comes good about 40% of the time. The other 60%, he's fallen asleep.",
       choices: [
-        { label: 'Accept the maybe', p: 3, v: 0, maybes: 1, msg: "You set a place for a maybe. It's a very thin one." },
-        { label: 'Send a beer emoji', p: 6, v: 3, maybes: 1, msg: 'A single beer emoji does what four paragraphs could not.' }
+        { label: 'Accept the maybe', p: 3, v: 0, maybes: 1, msg: "You put his name down in pencil. Very light pencil." },
+        { label: 'Send a beer emoji', p: 6, v: 3, maybes: 1, msg: "One beer emoji. It does more than the four paragraphs did." }
       ] },
     { id: 'calm', who: ['tom'],
       title: 'Tom is far too excited',
-      text: "'This is going to be the best night in history.' Tom has made a playlist. Tom has made a banner. Somebody needs to calm him down.",
+      text: "'Tonight's going to be the best night in history.' He's made a playlist. He's made a banner. Someone has to calm him down.",
       choices: [
-        { label: 'Calm Tom down', p: 2, v: 5, msg: 'You talk him down with nothing at all. He breathes. A little.' },
-        { label: 'Let him run with it', p: -4, v: -6, msg: 'The hype grows. A speech follows. It is about destiny.' }
+        { label: 'Calm Tom down', sub: 'Mini-game: hold and release', game: 'breathe',
+          ok: { p: 2, v: 10, msg: "Tom breathes out. He takes the banner down and folds it. 'For later,' he says." },
+          bad: { p: 0, v: 1, msg: "Tom breathes very fast and very keenly, and calls it a warm-up." } },
+        { label: 'Let him run with it', p: -4, v: -6, msg: "The hype builds. Then a speech. It's about destiny." }
       ] },
     { id: 'chop', who: ['tom'], chop: true,
       title: 'Tom is chopping a tree',
-      text: "Tom is in the lobby, chopping a virtual tree. He's been chopping for three hours. 'Just warming up,' he says.",
+      text: "Tom's in the lobby, chopping a tree. He's been at it three hours. 'Just warming up,' he says.",
       choices: [
-        { label: 'Join him', sub: 'Timber! mini-game', timber: true,
-          ok: { p: 4, v: 12, msg: 'Two grown men, one tree, absolute silence. It is the best part of the night.' },
+        { label: 'Join him', sub: 'Mini-game: Timber!', game: 'timber',
+          ok: { p: 4, v: 12, msg: "Two grown men, one tree, total silence. Best part of the night." },
           bad: { p: 0, v: 3, msg: "Tom out-chops you and says nothing. He doesn't need to." } },
-        { label: 'Leave him to it', p: 0, v: 2, easy: 1, msg: 'You are very relaxed about this. The tree is not.' }
+        { label: 'Leave him to it', p: 0, v: 2, easy: 1, msg: "You're very relaxed about it. The tree is not." }
       ] },
     { id: 'generous', who: ['tom', 'mork'],
-      title: "Tom paid for Mork's PlayStation Plus",
-      text: "For a whole year. Unprompted. Tom is one of the nicest people who has ever lived. There is also, you can't help feeling, a non-zero chance this isn't what it looks like.",
+      title: "Tom paid for Mork's PS Plus",
+      text: "A whole year, no reason given. Tom's one of the nicest people alive. There's also a non-zero chance this isn't what it looks like.",
       choices: [
-        { label: 'Thank him', p: 8, v: 8, msg: "Mork is nearly in tears. Tom waves it off. Then he asks, casually, for Mork's login 'to check the renewal'." },
-        { label: 'Ask what the catch is', p: 2, v: -2, steals: 1, msg: "'No catch.' It was bought with a gift card of unknown origin. Tom is already talking about something else." }
+        { label: 'Thank him', p: 8, v: 8, msg: "Mork's nearly in tears. Tom waves it off, then asks for Mork's login. 'To check the renewal.'" },
+        { label: 'Ask what the catch is', p: 2, v: -2, steals: 1, msg: "'There's no catch.' The gift card came from somewhere. Tom is already talking about something else." }
       ] },
     { id: 'steal', who: ['tom'],
       title: 'That sword was yours',
-      text: "A legendary sword drops. You pick it up. You look away for one second and it's in Tom's inventory. 'Safekeeping,' he says, warmly.",
+      text: "A legendary sword drops and you grab it. You look away for a second. It's in Tom's inventory. 'Safekeeping,' he says, warmly.",
       choices: [
-        { label: 'Let it slide', p: 3, v: 3, steals: 1, easy: 1, msg: "You're chill about it. He gives you three smaller swords to say sorry. It isn't even." },
-        { label: 'Take it back', sub: 'Risky', risk: 0.5,
-          ok: { p: 10, v: 2, msg: "He hands it over at once, delighted for you. It's almost suspicious." },
-          bad: { p: 0, v: -8, t: 15, steals: 1, msg: "He thanks you for the sword, hugs you, and is gone. You can't tell if you lost or won." } }
+        { label: 'Let it slide', p: 3, v: 3, steals: 1, easy: 1, msg: "You're chill about it. He gives you three smaller swords by way of apology. It isn't even." },
+        { label: 'Grab it back', sub: 'Mini-game: reaction', game: 'grab',
+          ok: { p: 10, v: 2, msg: "He hands it over at once, thrilled for you. Almost too thrilled." },
+          bad: { p: 0, v: -8, t: 15, steals: 1, msg: "He thanks you for the sword, hugs you, and is gone. You're not sure who won." } }
       ] },
     { id: 'inventory', who: ['tom', 'mork'],
       title: "Tom is 'looking after' Mork's stuff",
-      text: "Forty of Mork's items are now in Tom's inventory 'for safekeeping'. Mork hasn't noticed. Tom's face says: a man doing a good deed.",
+      text: "Forty of Mork's items are in Tom's inventory 'for safekeeping'. Mork hasn't noticed. Tom looks like a man doing a good deed.",
       choices: [
-        { label: 'Trust Tom', p: 2, v: 4, steals: 1, easy: 1, msg: "Of course. He's one of the nicest people alive. You think about it for a bit longer than you would like." },
-        { label: 'Ask for an inventory', p: 6, v: -4, msg: "He sends a spreadsheet within the minute. The spreadsheet is very thorough, and also doesn't add up." }
+        { label: 'Trust Tom', p: 2, v: 4, steals: 1, easy: 1, msg: "Of course. He's one of the nicest people alive. You think about it for longer than you'd like." },
+        { label: 'Ask for an inventory', p: 6, v: -4, msg: "A spreadsheet arrives within the minute. It's very thorough, and it doesn't add up." }
       ] },
     { id: 'pizza', who: ['don', 'tom', 'mork'],
-      title: "Order Mork a pizza",
-      text: "You can order a pizza straight to Mork's door. It is not strictly allowed. It is not strictly forbidden.",
+      title: 'Order Mork a pizza',
+      text: "You can order a pizza straight to Mork's door. Not strictly allowed. Not strictly forbidden either.",
       choices: [
-        { label: 'Order it', p: 8, v: 8, msg: 'His kid loves you for roughly ten minutes. Mork loves you for longer.' },
-        { label: 'Pizza for the whole chat', p: 4, v: 12, t: 15, msg: 'Three pizzas, three doors. A sacred moment of coordination.' }
+        { label: 'Order it', p: 8, v: 8, msg: "His kid loves you for ten minutes. Mork loves you for longer." },
+        { label: 'Pizza for the whole chat', p: 4, v: 12, t: 15, msg: "Three pizzas, three doors, one order. A rare moment of teamwork." }
       ] },
     { id: 'kidsasleep', who: ['mork'], lucky: true,
       title: 'The kid is asleep',
-      text: "A miracle: his kid is asleep before 7. Mork sends a single message: 'Do not speak to me. I am on my way.'",
+      text: "A miracle: his kid's asleep before 7. Mork sends one message: 'Do not speak to me. On my way.'",
       choices: [
-        { label: 'Send nothing. Hold your breath.', p: 25, v: 8, msg: 'Even Tom stays quiet. The world holds its breath for a full minute.' }
+        { label: 'Send nothing. Hold your breath.', p: 25, v: 8, msg: "Even Tom stays quiet. For a full minute, nobody types." }
       ] },
     { id: 'tomback', who: ['tom'],
       title: 'Tom is back',
-      text: "Tom has been gone for three weeks. No messages, no explanation. He returns with a tan, a new watch and a calm you don't trust. 'It was a retreat,' he says.",
+      text: "Three weeks. No messages, no explanation. Now he's online with a tan, a new watch and a calm you don't trust. 'It was a retreat,' he says.",
       choices: [
-        { label: 'Ask where he really was', p: 0, v: -4, msg: "'A retreat.' He says it twice, straight-faced. The watch is from a shop in Geneva." },
-        { label: "Don't ask", p: 2, v: 4, easy: 1, msg: "You don't ask. This is mostly why you're still friends." }
+        { label: 'Ask where he really was', p: 0, v: -4, msg: "'A retreat.' He says it again, completely straight. The watch is from a shop in Geneva." },
+        { label: "Don't ask", p: 2, v: 4, easy: 1, msg: "You don't ask. It's most of why you're still friends." }
       ] },
     { id: 'tomgone', who: ['tom'],
       title: 'Tom has gone quiet',
-      text: "Mid-conversation, Tom stops replying. 'Last seen 4 minutes ago', for twenty minutes. This has happened before. It lasted three weeks.",
+      text: "Mid-chat, Tom stops replying. 'Last seen 4 minutes ago', for twenty minutes. It's happened before. Last time it lasted three weeks.",
       choices: [
-        { label: 'Wait. He always comes back', p: 2, v: 0, t: 15, easy: 1, msg: "He comes back with 'sorry, signal'. There was no signal for the whole of Tuesday." },
-        { label: "Message: 'you ok?'", p: 0, v: 3, msg: "'Fine. Away.' Tom does not say from what, or to where." }
+        { label: 'Wait. He always comes back', p: 2, v: 0, t: 15, easy: 1, msg: "He's back with 'sorry, signal'. There was no signal for all of Tuesday." },
+        { label: "Message: 'you ok?'", p: 0, v: 3, msg: "'Fine. Away.' He doesn't say from what, or to where." }
       ] }
   ];
 
   // Tom disappears for weeks at a time and has never explained where
   var TOM_RUMOURS = [
-    'Rumour: Tom spent the last three weeks on a silent retreat. Nobody can confirm it; Tom is not silent.',
+    "Rumour: Tom spent three weeks on a silent retreat. Nobody believes it. Tom isn't silent.",
     "Rumour: Tom was in Lisbon, for work he won't name, with a tan he won't explain.",
-    "Tom mentions 'the Geneva thing' and immediately changes the subject.",
+    "Tom mentions 'the Geneva thing', then quickly changes the subject.",
     "Tom says a relative of his is wanted by Interpol. 'Different Tom,' he adds, unprompted.",
-    "Tom's last known location was 'somewhere warm'. He says it like a password.",
-    "Three strangers call Tom 'one of the nicest guys ever'. Two of them are missing a wallet.",
-    "Tom has sent Mork's family a gift basket. Nobody can work out why, which is exactly what bothers you."
+    "Tom's last known location: 'somewhere warm'. He says it like a password.",
+    "Three strangers call Tom one of the nicest guys ever. Two of them are missing a wallet.",
+    "Tom sent Mork's family a gift basket. Nobody knows why, and that's what bothers you."
   ];
 
   // ---------- state ----------
@@ -235,7 +248,7 @@
     var day = DAYS[dayKey];
     return { dayKey: dayKey, day: day, clock: START, leaveAt: START + WINDOW_MIN, shifts: 0,
       progress: 0, vibes: 40, pool: [], ev: null, phase: 'event', result: null, ending: null, started: false,
-      stats: { trees: 0, steals: 0, maybes: 0, easy: 0, lostMin: 0 } };
+      stats: { trees: 0, steals: 0, maybes: 0, easy: 0, lostMin: 0, miniPlayed: 0, miniWon: 0 } };
   }
 
   function fmtClock(m) {
@@ -296,6 +309,7 @@
       '<div class="gn-tv">' +
         '<div class="gn-boss"><div id="gn-boss"></div>' +
           '<div class="gn-hp">MORK READINESS <div class="gn-bar"><i id="gn-hp"></i></div></div></div>' +
+        '<p class="gn-hint" id="gn-hint">TAP SOMEONE ON THE SOFA</p>' +
         '<div class="gn-couch" id="gn-couch"></div>' +
       '</div>' +
       '<div class="gn-card" id="gn-card" aria-live="polite"></div>' +
@@ -309,12 +323,57 @@
 
   var couchEls = {};
   ['don', 'tom', 'mork'].forEach(function (id) {
-    var d = document.createElement('div');
-    d.className = 'gn-char';
-    d.innerHTML = sprite(CHARS[id].rows, 6) + '<span>' + CHARS[id].name + '</span><small></small>';
+    var d = document.createElement('button');
+    d.type = 'button';
+    d.className = 'gn-char gn-char-' + id;
+    d.setAttribute('aria-label', 'Poke ' + CHARS[id].name);
+    d.innerHTML = sprite(CHARS[id].rows, 6) + '<span>' + CHARS[id].name + '</span><small></small><em class="gn-say" aria-live="polite"></em>';
+    d.addEventListener('click', function () { poke(id); });
     elCouch.appendChild(d);
     couchEls[id] = d;
   });
+
+  // ---------- poking the sofa ----------
+
+  var QUIPS = {
+    don: ["I'm easy.", 'Whatever you lot want.', 'Honestly, any time is fine.', '*sips drink*', "Don't look at me, I'm just here.", 'Seven-thirty-ish. Or not. Easy.'],
+    tom: ['Has anyone seen my axe? Not that one. The other one.', "I'll look after that for you.", 'Just one more tree.',
+      'Where was I? Nowhere. Next question.', "You're both my best friends. Equally. Mostly.", "Nice watch, isn't it? Gift.",
+      'Did someone drop this? Safekeeping.']
+  };
+  var MORK_QUIPS = {
+    'STILL AT WORK': ['On a call. Typing with one hand.', 'Two minutes. (It is never two minutes.)', "Can't talk. Spreadsheet."],
+    'COMMUTING': ['On the train. Signal is a rumour.', 'Nearly home. Ish.'],
+    'DINNER + BATHS': ['Chicken dipper situation.', 'Someone is wearing the bath.', 'Hands full. Literally.'],
+    'BEDTIME': ['One more story. Then I am yours.', "Shh. He's nearly off.", 'The short one. There is no short one.'],
+    'IN THE LOBBY': ['…', '(headset on, cannot hear you)', 'Locked in. Do not speak.'],
+    'ASLEEP, PAD IN HAND': ['zzz…', '*presses X in his sleep*'],
+    'ASLEEP': ['zzz…', '(seen, 11:48 PM)']
+  };
+  var pokes = { don: 0, tom: 0, mork: 0 }, sayT = {};
+
+  function poke(id) {
+    pokes[id]++;
+    var line;
+    if (id === 'mork') {
+      var pool = MORK_QUIPS[morkStatus()] || ["Who's this?"];
+      line = pokes.mork % 5 === 0 && !(g && g.ending) ? 'Mork has muted the chat for 1 hour.' : pool[Math.floor(Math.random() * pool.length)];
+    } else if (id === 'tom' && pokes.tom % 4 === 0) {
+      line = TOM_RUMOURS[Math.floor(Math.random() * TOM_RUMOURS.length)];
+    } else {
+      line = QUIPS[id][Math.floor(Math.random() * QUIPS[id].length)];
+    }
+    var el = couchEls[id], b = el.querySelector('.gn-say');
+    b.textContent = line;
+    b.classList.add('on');
+    el.classList.remove('poked');
+    void el.offsetWidth;
+    el.classList.add('poked');
+    window.clearTimeout(sayT[id]);
+    sayT[id] = window.setTimeout(function () { b.classList.remove('on'); }, 2800);
+    var hint = document.getElementById('gn-hint');
+    if (hint) hint.parentNode.removeChild(hint);
+  }
 
   function setStatus() {
     var tomText = g && g.ending ? (g.ending === 'rage' ? 'TOO EXCITED' : 'CHOPPING') : 'BACK FROM A "RETREAT"';
@@ -353,10 +412,11 @@
     var found = endingsFound().length;
     elCard.innerHTML =
       '<h2>WHERE\'S MORK?</h2>' +
-      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom has been online since two, his first appearance in three weeks. He is one of the nicest men alive, and there is a non-zero chance he is robbing you. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no interruptions, no work. The only hard part is getting him there. You are Don. You are, famously, easy.</p>" +
+      "<p>Kick-off is 7:30. The chat pings at 5:30. Tom is online for the first time in three weeks. He's one of the nicest men alive, and there's a non-zero chance he's robbing you. Mork is the busiest man you know, but once he's in the lobby nothing gets through: no calls, no work, no interruptions. Getting him there is the hard part. You're Don. You're easy.</p>" +
+      '<p>Some choices are mini-games. Poke the gang on the sofa any time.</p>' +
       '<div class="gn-choices">' +
-        '<button class="gn-btn" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
-        '<button class="gn-btn" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
+        '<button class="gn-btn" data-key="1" data-day="sunday">SUNDAY<small>' + DAYS.sunday.blurb + '</small></button>' +
+        '<button class="gn-btn" data-key="2" data-day="wednesday">WEDNESDAY<small>' + DAYS.wednesday.blurb + '</small></button>' +
       '</div>' +
       '<p class="gn-found">Endings found: ' + found + ' / ' + ENDING_COUNT + '</p>';
   }
@@ -367,7 +427,7 @@
     renderMeters();
     var html = '<h2>' + esc(ev.title) + '</h2><p>' + esc(ev.text) + '</p><div class="gn-choices">';
     ev.choices.forEach(function (c, i) {
-      html += '<button class="gn-btn" data-choice="' + i + '">' + esc(c.label) + (c.sub ? '<small>' + esc(c.sub) + '</small>' : '') + '</button>';
+      html += '<button class="gn-btn" data-key="' + (i + 1) + '" data-choice="' + i + '">' + esc(c.label) + (c.sub ? '<small>' + esc(c.sub) + '</small>' : '') + '</button>';
     });
     elCard.innerHTML = html + '</div>';
   }
@@ -381,31 +441,44 @@
   function renderResult() {
     var r = g.result;
     renderMeters();
-    var chips = chip('READY', r.p, true) + chip('VIBES', r.v, true);
+    var chips = (r.mini ? '<span class="gn-chip ' + (r.mini.win ? 'good">MINI-GAME WON' : 'bad">MINI-GAME LOST') + '</span>' : '') +
+      chip('READY', r.p, true) + chip('VIBES', r.v, true);
     if (r.mins > ROUND_MIN) chips += '<span class="gn-chip bad">+' + (r.mins - ROUND_MIN) + ' MIN LOST</span>';
     if (r.d) chips += '<span class="gn-chip neutral">KICK-OFF +' + r.d + ' MIN</span>';
     elCard.innerHTML =
       '<h2>' + esc(g.ev.title) + '</h2>' +
+      (r.mini && r.mini.note ? '<p class="gn-note">' + esc(r.mini.note) + '</p>' : '') +
       '<p>' + esc(r.msg) + '</p>' +
       '<p>' + esc(r.trees) + '</p>' +
       '<div class="gn-chips">' + chips + '</div>' +
       '<button class="gn-btn gn-go" data-next="1">CONTINUE</button>';
+    floatDelta(elVibes.parentNode, r.v);
+    floatDelta(elHp.parentNode, r.p);
     var b = elCard.querySelector('[data-next]');
     if (b) b.focus();
   }
 
+  function floatDelta(anchor, val) {
+    if (!val) return;
+    var s = document.createElement('span');
+    s.className = 'gn-float ' + (val > 0 ? 'good' : 'bad');
+    s.textContent = (val > 0 ? '+' : '') + val;
+    anchor.appendChild(s);
+    window.setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); }, 1300);
+  }
+
   var VERDICT = {
     win: ['MORK IS IN', function () {
-      return 'Mork joins at ' + fmtClock(g.clock) + ', headset on, phone in another room: a man transformed. Nothing gets through. Tom claims credit for the entire evening.';
+      return 'Mork joins at ' + fmtClock(g.clock) + ', headset on, phone in another room. Nothing gets through. Tom takes credit for the whole evening.';
     }],
     late: ['MORK, ARRIVING LATE', function () {
-      return "He joins at 8:40, exhausted, and plays with the focus of a monk. By 9:15 he's asleep with the controller in his hand. Tom keeps playing and describes it as 'his best work'.";
+      return "He joins at 8:40, shattered, and plays like a monk. By 9:15 he's asleep with the controller in his hand. Tom plays on and calls it 'his best work'.";
     }],
     noshow: ['NO MORK', function () {
-      return 'No answer. No message. Mork is probably asleep on a sofa somewhere, and happier for it. You and Tom play as a duo while Tom explains trees for three hours. See you ' + g.day.next + '.';
+      return 'No reply, no message. Mork is asleep on a sofa somewhere, and probably happier for it. You and Tom play as a pair while Tom explains trees for three hours. See you ' + g.day.next + '.';
     }],
     rage: ["TOM COULDN'T WAIT", function () {
-      return "The mood collapsed. Tom, wound up beyond help, started the session without Mork, then spent three hours apologising to a man who was asleep and not at all upset.";
+      return "The mood collapsed. Tom, far too wound up, started without Mork, then spent three hours apologising to a man who was asleep and not remotely upset.";
     }]
   };
 
@@ -419,9 +492,10 @@
       st.steals === 0 ? 'Tom took nothing. Either a saint, or <b>very good</b>.'
         : st.steals < 3 ? "Tom 'looked after' <b>" + st.steals + '</b> thing' + (st.steals === 1 ? '' : 's') + '. Probably fine.'
         : "Tom 'looked after' <b>" + st.steals + '</b> things. Chance he is robbing you: <b>non-zero</b>.',
-      "Where Tom has been for three weeks: <b>unconfirmed</b> (retreat, or heist)",
+      "Where Tom's been: <b>unconfirmed</b> (retreat, or heist)",
       st.maybes === 0 ? "Mork never said 'maybe'. <b>He knew.</b>" : "Mork said 'maybe' <b>" + st.maybes + '</b> time' + (st.maybes === 1 ? '' : 's'),
-      st.easy === 0 ? 'Don made decisions. <b>Out of character.</b>' : "Don said 'I'm easy' (or meant it) <b>" + st.easy + '</b> time' + (st.easy === 1 ? '' : 's')
+      st.miniPlayed === 0 ? 'Mini-games played: <b>none</b>. Very Don.' : 'Mini-games won: <b>' + st.miniWon + ' / ' + st.miniPlayed + '</b>',
+      st.easy === 0 ? 'Don decided things. <b>Out of character.</b>' : "Don was 'easy' about it <b>" + st.easy + '</b> time' + (st.easy === 1 ? '' : 's')
     ];
     elCard.setAttribute('data-ending', g.ending);
     elCard.innerHTML =
@@ -452,8 +526,9 @@
     return { p: p, v: v, d: o.d || 0, mins: mins, msg: o.msg, trees: aside };
   }
 
-  function resolve(outcome) {
+  function resolve(outcome, mini) {
     g.result = applyEffects(outcome);
+    g.result.mini = mini || null;
     g.phase = 'result';
     renderResult();
   }
@@ -461,7 +536,7 @@
   function choose(i) {
     var c = g.ev.choices[i];
     if (!c) return;
-    if (c.timber) { startTimber(c); return; }
+    if (c.game) { startMini(c); return; }
     if (c.risk) { resolve(Math.random() < c.risk ? c.ok : c.bad); return; }
     resolve(c);
   }
@@ -479,36 +554,234 @@
     renderEvent();
   }
 
-  // Timber! — tap CHOP enough times before the clock runs out
-  var timber = null;
-  var TIMBER_TAPS = 20, TIMBER_MS = 5000;
+  // ---------- mini-games ----------
+  // Each one draws itself into the card, calls done(win, note) once, and
+  // returns a cleanup function that stops its timers.
 
-  function startTimber(choice) {
-    timber = { choice: choice, taps: 0, done: false };
+  var mini = null;
+  function $(id) { return document.getElementById(id); }
+  function now() { return window.performance && performance.now ? performance.now() : Date.now(); }
+
+  function startMini(choice) {
+    var finished = false;
+    mini = {};
+    mini.cleanup = MINI[choice.game](function (win, note) {
+      if (finished) return;
+      finished = true;
+      if (mini && mini.cleanup) mini.cleanup();
+      mini = null;
+      g.stats.miniPlayed++;
+      if (win) g.stats.miniWon++;
+      resolve(win ? choice.ok : choice.bad, { win: win, note: note || '' });
+    });
+  }
+
+  // drains the #gn-time bar over ms, then calls onEnd
+  function countdown(ms, onEnd) {
+    var t0 = now(), raf, el = $('gn-time');
+    (function tick() {
+      var left = 1 - (now() - t0) / ms;
+      if (el) el.style.width = Math.max(0, left * 100) + '%';
+      if (left <= 0) { onEnd(); return; }
+      raf = window.requestAnimationFrame(tick);
+    })();
+    return function () { window.cancelAnimationFrame(raf); };
+  }
+
+  var MINI = {};
+
+  // Timber! — tap CHOP enough times before the clock runs out
+  MINI.timber = function (done) {
+    var TAPS = 20, taps = 0, t0 = now();
     elCard.innerHTML =
-      '<div class="gn-timber"><h2>TIMBER!</h2><p>Tap CHOP ' + TIMBER_TAPS + ' times before the tree wins.</p>' +
-      '<button class="gn-btn" id="gn-chop">CHOP</button>' +
-      '<div class="gn-bar"><i id="gn-chop-bar" style="width:0"></i></div>' +
-      '<p id="gn-chop-info">0 / ' + TIMBER_TAPS + '</p></div>';
-    var btn = document.getElementById('gn-chop');
+      '<div class="gn-mini"><h2>TIMBER!</h2><p>Tap CHOP ' + TAPS + ' times before the tree wins.</p>' +
+      '<div class="gn-bar gn-wide gn-timer"><i id="gn-time"></i></div>' +
+      '<button class="gn-btn gn-big" id="gn-act">CHOP</button>' +
+      '<div class="gn-bar gn-wide"><i id="gn-prog" style="width:0"></i></div>' +
+      '<p id="gn-info">0 / ' + TAPS + '</p></div>';
+    var btn = $('gn-act');
     btn.focus();
     btn.addEventListener('click', function () {
-      if (!timber || timber.done) return;
-      timber.taps++;
-      document.getElementById('gn-chop-bar').style.width = Math.min(100, timber.taps / TIMBER_TAPS * 100) + '%';
-      document.getElementById('gn-chop-info').textContent = timber.taps + ' / ' + TIMBER_TAPS;
-      if (timber.taps >= TIMBER_TAPS) finishTimber();
+      taps++;
+      $('gn-prog').style.width = Math.min(100, taps / TAPS * 100) + '%';
+      $('gn-info').textContent = taps + ' / ' + TAPS;
+      btn.classList.remove('hit');
+      void btn.offsetWidth;
+      btn.classList.add('hit');
+      if (taps >= TAPS) done(true, 'Felled in ' + ((now() - t0) / 1000).toFixed(1) + ' seconds.');
     });
-    timber.timer = window.setTimeout(finishTimber, TIMBER_MS);
-  }
-  function finishTimber() {
-    if (!timber || timber.done) return;
-    timber.done = true;
-    window.clearTimeout(timber.timer);
-    var win = timber.taps >= TIMBER_TAPS, c = timber.choice;
-    timber = null;
-    resolve(win ? c.ok : c.bad);
-  }
+    return countdown(5000, function () { done(false, taps + ' / ' + TAPS + ' chops. The tree stands.'); });
+  };
+
+  // Catch him typing — stop a sweeping marker inside Mork's "typing…" window
+  MINI.typing = function (done) {
+    var hits = 0, misses = 0, pos = 0, dir = 1, speed = 0.75, zone, last = now(), raf, flashT;
+    elCard.innerHTML =
+      '<div class="gn-mini"><h2>CATCH HIM TYPING</h2>' +
+      "<p>Mork's 'typing…' flickers on and off. Hit SEND while the marker is inside his window. Two hits and you have him; two misses and he's gone.</p>" +
+      '<div class="gn-track" id="gn-track"><b id="gn-zone">typing…</b><i id="gn-mark"></i></div>' +
+      '<p id="gn-info">Hits 0 · Misses 0</p>' +
+      '<button class="gn-btn gn-big" id="gn-act">SEND</button></div>';
+    var mark = $('gn-mark'), zoneEl = $('gn-zone'), track = $('gn-track'), btn = $('gn-act');
+    function newZone() {
+      var w = 0.24 - hits * 0.06;
+      zone = { x: 0.04 + Math.random() * (0.92 - w), w: w };
+      zoneEl.style.left = zone.x * 100 + '%';
+      zoneEl.style.width = zone.w * 100 + '%';
+    }
+    newZone();
+    (function tick() {
+      var t = now(), dt = Math.min(0.05, (t - last) / 1000);
+      last = t;
+      pos += dir * speed * dt;
+      if (pos > 1) { pos = 1; dir = -1; }
+      if (pos < 0) { pos = 0; dir = 1; }
+      mark.style.left = pos * 100 + '%';
+      raf = window.requestAnimationFrame(tick);
+    })();
+    btn.focus();
+    btn.addEventListener('click', function () {
+      var hit = pos >= zone.x && pos <= zone.x + zone.w;
+      if (hit) hits++; else misses++;
+      track.className = 'gn-track ' + (hit ? 'hit' : 'miss');
+      window.clearTimeout(flashT);
+      flashT = window.setTimeout(function () { track.className = 'gn-track'; }, 300);
+      $('gn-info').textContent = (hit ? 'Delivered! ' : 'He stopped typing. ') + 'Hits ' + hits + ' · Misses ' + misses;
+      if (hits >= 2) { done(true, 'Both messages landed mid-typing. He felt seen.'); return; }
+      if (misses >= 2) { done(false, "Both messages arrived while he wasn't looking."); return; }
+      speed *= 1.35;
+      newZone();
+    });
+    return function () { window.cancelAnimationFrame(raf); window.clearTimeout(flashT); };
+  };
+
+  // Grab it — reaction test against Tom's hands
+  MINI.grab = function (done) {
+    var shown = false, t0 = 0, waitT, loseT, LIMIT = 600;
+    elCard.innerHTML =
+      '<div class="gn-mini"><h2>GRAB IT</h2>' +
+      "<p>The sword is about to drop again. Tap GRAB the moment it appears. Too early and Tom 'looks after it'.</p>" +
+      '<div class="gn-arena" id="gn-arena"><span>WAIT FOR IT…</span></div>' +
+      '<button class="gn-btn gn-big" id="gn-act">GRAB</button></div>';
+    var arena = $('gn-arena'), btn = $('gn-act');
+    btn.focus();
+    waitT = window.setTimeout(function () {
+      shown = true;
+      t0 = now();
+      arena.innerHTML = sprite(SWORD, 6);
+      arena.classList.add('drop');
+      loseT = window.setTimeout(function () { done(false, "Too slow. Tom's hand was already there. It's always already there."); }, LIMIT);
+    }, 1200 + Math.random() * 2300);
+    btn.addEventListener('click', function () {
+      if (!shown) { done(false, 'Too early. Tom catches the sword, beams at you, and pockets it.'); return; }
+      done(true, 'Grabbed in ' + Math.round(now() - t0) + ' ms. Tom applauds, sincerely.');
+    });
+    return function () { window.clearTimeout(waitT); window.clearTimeout(loseT); };
+  };
+
+  // Dishwasher dash — tap the plates before they go
+  MINI.dishes = function (done) {
+    var NEED = 10, MS = 9000, loaded = 0, spawnT, hideT = {}, t0 = now();
+    var html = '<div class="gn-mini"><h2>DISHWASHER DASH</h2><p>Mork is on video, loading. Tap each dirty plate before it slides away. ' +
+      NEED + ' plates and he is free.</p><div class="gn-bar gn-wide gn-timer"><i id="gn-time"></i></div><div class="gn-grid" id="gn-grid">';
+    for (var i = 0; i < 9; i++) html += '<button type="button" class="gn-slot" data-slot="' + i + '" aria-label="Empty rack"></button>';
+    elCard.innerHTML = html + '</div><p id="gn-info">0 / ' + NEED + ' plates</p></div>';
+    var grid = $('gn-grid'), slots = grid.children;
+    function clear(k) {
+      window.clearTimeout(hideT[k]);
+      slots[k].classList.remove('on');
+      slots[k].setAttribute('aria-label', 'Empty rack');
+    }
+    function spawn() {
+      var empty = [];
+      for (var j = 0; j < slots.length; j++) if (!slots[j].classList.contains('on')) empty.push(j);
+      if (empty.length) {
+        var k = empty[Math.floor(Math.random() * empty.length)];
+        slots[k].classList.add('on');
+        slots[k].setAttribute('aria-label', 'Dirty plate');
+        hideT[k] = window.setTimeout(function () { clear(k); }, 1150);
+      }
+      spawnT = window.setTimeout(spawn, 360 + Math.random() * 320);
+    }
+    grid.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.gn-slot') : null;
+      if (!b || !b.classList.contains('on')) return;
+      clear(+b.getAttribute('data-slot'));
+      loaded++;
+      $('gn-info').textContent = loaded + ' / ' + NEED + ' plates';
+      if (loaded >= NEED) done(true, 'Loaded with ' + Math.max(0, (MS - (now() - t0)) / 1000).toFixed(1) + ' seconds to spare.');
+    });
+    spawn();
+    var stop = countdown(MS, function () { done(false, loaded + ' / ' + NEED + ' plates. A pan remains. There is always a pan.'); });
+    return function () {
+      stop();
+      window.clearTimeout(spawnT);
+      Object.keys(hideT).forEach(function (k) { window.clearTimeout(hideT[k]); });
+    };
+  };
+
+  // Breathe with Tom — hold to grow the circle, release inside the gold ring
+  MINI.breathe = function (done) {
+    var GROW = 2200, MAX = 1.08, LO = 0.66, HI = 0.86, good = 0, bad = 0, holding = false, t0 = 0, size = 0, raf;
+    elCard.innerHTML =
+      '<div class="gn-mini"><h2>BREATHE WITH TOM</h2>' +
+      '<p>Hold the button to breathe in. Let go while the circle is inside the gold ring. Two good breaths and Tom is calm.</p>' +
+      '<div class="gn-lung"><b></b><i id="gn-breath"></i></div>' +
+      '<p id="gn-info">Good 0 · Bad 0</p>' +
+      '<button type="button" class="gn-btn gn-big gn-hold" id="gn-act">HOLD</button></div>';
+    var btn = $('gn-act'), circle = $('gn-breath');
+    function draw() {
+      circle.style.transform = 'translate(-50%, -50%) scale(' + size + ')';
+      circle.className = holding ? (size >= LO && size <= HI ? 'grow in' : 'grow') : '';
+    }
+    function tick() {
+      size = Math.min(MAX, (now() - t0) / GROW);
+      draw();
+      if (size >= MAX) { release(); return; }
+      raf = window.requestAnimationFrame(tick);
+    }
+    function press() {
+      if (holding) return;
+      holding = true;
+      t0 = now();
+      btn.textContent = 'BREATHE IN…';
+      raf = window.requestAnimationFrame(tick);
+    }
+    function release() {
+      if (!holding) return;
+      holding = false;
+      window.cancelAnimationFrame(raf);
+      var ok = size >= LO && size <= HI;
+      if (ok) good++; else bad++;
+      $('gn-info').textContent = (ok ? 'Lovely. ' : size < LO ? 'Too shallow. ' : 'Too much. Tom is now dizzy. ') + 'Good ' + good + ' · Bad ' + bad;
+      btn.textContent = 'HOLD';
+      size = 0;
+      draw();
+      if (good >= 2) done(true, 'Two slow breaths. Tom is, briefly, at peace.');
+      else if (bad >= 2) done(false, 'Tom hyperventilates with joy.');
+    }
+    btn.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+      press();
+    });
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    btn.addEventListener('keydown', function (e) {
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      e.preventDefault();
+      if (!e.repeat) press();
+    });
+    btn.addEventListener('keyup', function (e) {
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      e.preventDefault();
+      release();
+    });
+    btn.focus();
+    draw();
+    return function () { window.cancelAnimationFrame(raf); };
+  };
 
   elCard.addEventListener('click', function (e) {
     var t = e.target.closest ? e.target.closest('button') : null;
@@ -517,6 +790,15 @@
     else if (t.hasAttribute('data-choice')) choose(parseInt(t.getAttribute('data-choice'), 10));
     else if (t.hasAttribute('data-next')) nextRound();
     else if (t.hasAttribute('data-again')) { elCard.removeAttribute('data-ending'); renderIntro(); }
+  });
+
+  // number keys pick a choice
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey || mini) return;
+    var n = parseInt(e.key, 10);
+    if (!(n >= 1)) return;
+    var btns = elCard.querySelectorAll('.gn-choices .gn-btn');
+    if (btns[n - 1]) { e.preventDefault(); btns[n - 1].click(); }
   });
 
   renderIntro();
