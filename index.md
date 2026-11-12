@@ -14,6 +14,10 @@ title: Dan
     <span class="home-link-title">Tiny Bakery</span>
     <span class="home-link-desc">An idle game about bread and mild despair</span>
   </a>
+  <a class="home-link" href="/bromeadow/">
+    <span class="home-link-title">Mr Bromeadow Clicker</span>
+    <span class="home-link-desc">Poke the face. Earn Broms. Ask no questions.</span>
+  </a>
   <a class="home-link" href="/game-night/">
     <span class="home-link-title">Where's Mork?</span>
     <span class="home-link-desc">Two hours to get your busiest friend online</span>
