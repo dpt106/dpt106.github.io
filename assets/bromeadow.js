@@ -454,15 +454,15 @@
   });
 
   // ---------- secret: the Iron Finger ----------
-  // Hold the poke down for 10 seconds and it starts adding 500 pokes every
-  // half second until you let go.
-  var HOLD_MS = 10000, RAPID_MS = 500, RAPID_POKES = 500;
+  // Hold the poke down for 10 seconds and every half second after that is
+  // worth 10 pokes (so it scales with your current poke strength).
+  var HOLD_MS = 10000, RAPID_MS = 500, RAPID_MULT = 10;
   var holdTimer = null, rapidTimer = null;
   function startHold() {
     stopHold();
     holdTimer = setTimeout(function () {
       holdTimer = null;
-      if (!S.secret) toast('🤫 Secret found: The Iron Finger! Keep holding for +' + RAPID_POKES + ' pokes every half second.', true, true);
+      if (!S.secret) toast('🤫 Secret found: The Iron Finger! Keep holding for ' + RAPID_MULT + '× poke power every half second.', true, true);
       S.secret = (S.secret || 0) + 1;
       root.querySelector('.mb').classList.add('iron');
       rapid();
@@ -470,11 +470,11 @@
     }, HOLD_MS);
   }
   function rapid() {
-    var v = addPokes(RAPID_POKES);
+    var v = addPokes(RAPID_MULT);
     blip(500 + Math.random() * 300, 0.06, 'square', 0.03);
     var f = document.createElement('span');
     f.className = 'mb-float mb-float-big';
-    f.textContent = '+' + RAPID_POKES + ' pokes · +' + fmt(v);
+    f.textContent = '+' + fmt(v, true) + ' (' + RAPID_MULT + '×)';
     f.style.left = (40 + Math.random() * 20) + '%';
     f.style.top = (35 + Math.random() * 20) + '%';
     elWrap.appendChild(f);
