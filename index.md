@@ -22,8 +22,8 @@ title: Dan
     <span class="home-link-title">Where's Mork?</span>
     <span class="home-link-desc">Two hours to get your busiest friend online</span>
   </a>
-  <a class="home-link" href="/peg-commando/">
-    <span class="home-link-title">Peg Commando</span>
+  <a class="home-link" href="/chaddle/">
+    <span class="home-link-title">Chaddle</span>
     <span class="home-link-desc">Ten grenades. Too many pegs. One thumbs up.</span>
   </a>
   <a class="home-link" href="/about/">

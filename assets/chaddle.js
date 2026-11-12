@@ -1,4 +1,4 @@
-/* Peg Commando — a short peg-bouncing game. Lob grenades from the top,
+/* Chaddle — a short peg-bouncing game. Lob grenades from the top,
    bounce them off pegs, and knock out every orange target across three
    sectors. Renders into #commando. Only the best score and the mute
    setting are kept (localStorage). */
@@ -20,7 +20,7 @@
   var BUCKET_Y = H - 30, BUCKET_W = 96;
   var SLOT_TOP = H - 70, SLOT_VALUES = [10000, 25000, 50000, 25000, 10000];
   var AMMO_BONUS = 2500;
-  var BEST_KEY = 'peg-commando-best', MUTE_KEY = 'peg-commando-mute';
+  var BEST_KEY = 'chaddle-best', MUTE_KEY = 'chaddle-mute';
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var COLORS = {
@@ -761,7 +761,7 @@
     var b = best();
     showOverlay(
       faceHtml() +
-      '<h2>PEG COMMANDO</h2>' +
+      '<h2>CHADDLE</h2>' +
       '<p>The jungle is crawling with orange targets. You have ten grenades per sector and a man who believes in you.</p>' +
       '<ul>' +
         '<li><span class="pc-dot" style="background:#e86a17"></span>Hit every orange target to clear a sector</li>' +
