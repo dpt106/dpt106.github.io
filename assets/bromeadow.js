@@ -131,7 +131,8 @@
     ['Fully Bespoke', 'Buy 40 upgrades.', function (s) { return s.upgrades.length >= 40; }],
     ['It\'s Spreading', 'Make Mr Bromeadow copy himself.', function (s) { return mutStage(s.clicks) >= 2; }],
     ['Do Not Look Directly At Him', 'Open the third eye.', function (s) { return mutStage(s.clicks) >= 6; }],
-    ['What Have You Done', 'Reach Eldritch Bromeadow.', function (s) { return mutStage(s.clicks) >= 9; }]
+    ['What Have You Done', 'Reach Eldritch Bromeadow.', function (s) { return mutStage(s.clicks) >= 9; }],
+    ['The Iron Finger', 'Hold on. Just... hold on.', function (s) { return s.secret >= 1; }, true]
   ];
 
   var NEWS = [
@@ -199,7 +200,7 @@
   // ---------- state ----------
 
   function fresh() {
-    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true, mutate: true, mstage: 0 };
+    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true, mutate: true, mstage: 0, secret: 0 };
   }
   var S = fresh();
   try {
@@ -401,10 +402,10 @@
 
   // ---------- poking ----------
 
-  function poke(x, y) {
-    var v = clickValue();
+  function addPokes(n) {
+    var v = clickValue() * n;
     earn(v);
-    S.clicks++;
+    S.clicks += n;
     S.clickEarned += v;
     var st = mutStage(S.clicks);
     if (st > S.mstage) {
@@ -416,6 +417,10 @@
       var mb = root.querySelector('.mb');
       mb.classList.remove('shake'); void mb.offsetWidth; mb.classList.add('shake');
     }
+    return v;
+  }
+  function poke(x, y) {
+    var v = addPokes(1);
     blip(300 + Math.random() * 120, 0.08, 'sine', 0.05);
     elFace.classList.remove('boop');
     void elFace.offsetWidth;
@@ -445,7 +450,47 @@
   elFace.addEventListener('pointerdown', function (e) {
     if (e.button !== undefined && e.button !== 0) return;
     poke(e.clientX, e.clientY);
+    startHold();
   });
+
+  // ---------- secret: the Iron Finger ----------
+  // Hold the poke down for 10 seconds and it starts adding 500 pokes every
+  // half second until you let go.
+  var HOLD_MS = 10000, RAPID_MS = 500, RAPID_POKES = 500;
+  var holdTimer = null, rapidTimer = null;
+  function startHold() {
+    stopHold();
+    holdTimer = setTimeout(function () {
+      holdTimer = null;
+      if (!S.secret) toast('🤫 Secret found: The Iron Finger! Keep holding for +' + RAPID_POKES + ' pokes every half second.', true, true);
+      S.secret = (S.secret || 0) + 1;
+      root.querySelector('.mb').classList.add('iron');
+      rapid();
+      rapidTimer = setInterval(rapid, RAPID_MS);
+    }, HOLD_MS);
+  }
+  function rapid() {
+    var v = addPokes(RAPID_POKES);
+    blip(500 + Math.random() * 300, 0.06, 'square', 0.03);
+    var f = document.createElement('span');
+    f.className = 'mb-float mb-float-big';
+    f.textContent = '+' + RAPID_POKES + ' pokes · +' + fmt(v);
+    f.style.left = (40 + Math.random() * 20) + '%';
+    f.style.top = (35 + Math.random() * 20) + '%';
+    elWrap.appendChild(f);
+    setTimeout(function () { f.remove(); }, 1000);
+    update();
+  }
+  function stopHold() {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+    if (rapidTimer) { clearInterval(rapidTimer); rapidTimer = null; }
+    var mb = root.querySelector('.mb');
+    if (mb) mb.classList.remove('iron');
+  }
+  window.addEventListener('pointerup', stopHold);
+  window.addEventListener('pointercancel', stopHold);
+  window.addEventListener('blur', stopHold);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stopHold(); });
   elFace.addEventListener('click', function (e) { if (e.detail === 0) poke(); }); // keyboard
   elFace.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
@@ -489,12 +534,12 @@
 
   // ---------- toasts, ticker, stats ----------
 
-  function toast(msg, big) {
+  function toast(msg, big, pin) {
     var t = document.createElement('div');
-    t.className = 'mb-toast' + (big ? ' big' : '');
+    t.className = 'mb-toast' + (big ? ' big' : '') + (pin ? ' pin' : '');
     t.textContent = msg;
     elToasts.appendChild(t);
-    while (elToasts.children.length > 3) (elToasts.querySelector('.mb-toast:not(.big)') || elToasts.firstChild).remove();
+    while (elToasts.children.length > 3) (elToasts.querySelector('.mb-toast:not(.big)') || elToasts.querySelector('.mb-toast:not(.pin)') || elToasts.firstChild).remove();
     setTimeout(function () { t.classList.add('out'); }, big ? 5500 : 3200);
     setTimeout(function () { t.remove(); }, big ? 6000 : 3700);
   }
@@ -550,6 +595,7 @@
     $('.mb-achcount').textContent = S.ach.length + ' / ' + ACHIEVEMENTS.length;
     elAchs.innerHTML = ACHIEVEMENTS.map(function (a, i) {
       var got = S.ach.indexOf(i) >= 0;
+      if (a[3] && !got) return '<div class="mb-ach"><b>🔒 ???</b><span>A secret.</span></div>';
       return '<div class="mb-ach' + (got ? ' got' : '') + '" title="' + esc(a[1]) + '"><b>' + (got ? '🏅 ' : '🔒 ') + esc(a[0]) + '</b><span>' + esc(a[1]) + '</span></div>';
     }).join('');
     $('.mb-sound').textContent = S.sound ? '🔊 Sound on' : '🔇 Sound off';

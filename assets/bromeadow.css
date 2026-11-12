@@ -98,6 +98,7 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 4px var(--mb-edge);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   user-select: none; -webkit-user-select: none;
   animation: mb-wobble 6s ease-in-out infinite;
   transition: transform 0.08s;
@@ -162,6 +163,9 @@
   pointer-events: none;
   animation: mb-float 1s ease-out forwards;
 }
+.mb-float-big { font-size: 26px; color: var(--mb-gold); white-space: nowrap; }
+.mb.iron .mb-face { border-color: #fff; box-shadow: 0 0 50px 16px rgba(255, 201, 77, 0.85), 0 0 0 4px var(--mb-edge); }
+.mb.iron .mb-face-wrap { animation: mb-shake 0.25s infinite; }
 .mb-crumb {
   position: absolute; z-index: 2;
   width: 8px; height: 8px; margin: -4px 0 0 -4px;
