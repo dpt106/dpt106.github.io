@@ -288,3 +288,8 @@ body.gn-page { display: flex; flex-direction: column; height: 100vh; height: 100
 .gn-cw li { margin: 2px 0; }
 @keyframes gn-cw-blink { 50% { color: var(--gn-gold); } }
 @media (prefers-reduced-motion: reduce) { .gn-cw h2 { animation: none; } }
+.gn-msg { position: relative; }
+.gn-media { display: block; }
+.gn-media i { display: inline-block; margin-right: 6px; padding: 1px 4px; border: 2px solid currentColor; font: 7px/1.4 var(--gn-pixel); font-style: normal; vertical-align: 2px; opacity: 0.8; }
+.gn-react { position: absolute; right: 8px; bottom: -12px; padding: 1px 6px; background: #1b2152; border: 2px solid var(--gn-edge); border-radius: 10px; font-size: 11px; font-style: normal; line-height: 1.3; }
+.gn-msg.has-react { margin-bottom: 10px; }
