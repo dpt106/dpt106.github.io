@@ -22,6 +22,10 @@ title: Dan
     <span class="home-link-title">Where's Mork?</span>
     <span class="home-link-desc">Two hours to get your busiest friend online</span>
   </a>
+  <a class="home-link" href="/bro-code/">
+    <span class="home-link-title">Python for Beginners</span>
+    <span class="home-link-desc">My exercises from the Bro Code course</span>
+  </a>
   <a class="home-link" href="/about/">
     <span class="home-link-title">About</span>
     <span class="home-link-desc">A little about this site</span>
