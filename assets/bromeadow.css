@@ -60,17 +60,24 @@
 
 /* stage */
 .mb-stage {
+  position: relative; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 12px; text-align: center;
 }
+.mb-count, .mb-rate, .mb-name, .mb-mut, .mb-buffs { position: relative; z-index: 2; text-shadow: 0 1px 3px var(--mb-edge), 0 0 8px var(--mb-edge); }
 .mb-count { font-family: var(--mb-font); font-weight: 700; font-size: clamp(20px, 3.6vh, 30px); line-height: 1.15; }
 .mb-unit { color: var(--mb-gold); }
 .mb-rate { position: relative; z-index: 1; color: var(--mb-dim); font-size: 13px; margin: 2px 0 14px; }
 .mb-face-wrap {
+  --fw: clamp(150px, min(38vh, 32vw), 300px);
   position: relative;
-  width: clamp(150px, min(42vh, 34vw), 320px);
+  width: var(--fw);
+  margin: calc((var(--grow, 1) - 1) * var(--fw) / 2) 0;
   aspect-ratio: 1;
   flex: 0 1 auto;
+  z-index: 1;
+  transform: scale(var(--grow, 1));
+  transition: transform 0.25s cubic-bezier(.3, 1.6, .5, 1);
 }
 .mb-glow {
   position: absolute; inset: -12%;
@@ -99,6 +106,52 @@
 .mb-face:active { transform: scale(0.94); }
 .mb-face.boop img { animation: mb-boop 0.18s ease-out; }
 .mb-face img { width: 100%; height: 100%; display: block; object-fit: cover; pointer-events: none; }
+
+/* mutation: the face itself */
+.mb-flesh { position: absolute; inset: 0; }
+.mutating .mb-flesh { inset: -7%; animation: mb-squish 2.4s ease-in-out infinite; }
+.mb-feat {
+  position: absolute; border-radius: 50%; overflow: hidden;
+  -webkit-mask: radial-gradient(circle, #000 45%, transparent 70%);
+  mask: radial-gradient(circle, #000 45%, transparent 70%);
+  transition: transform 0.4s, opacity 0.4s;
+  pointer-events: none;
+}
+.mb-face .mb-feat img { position: absolute; width: auto; height: auto; max-width: none; aspect-ratio: 1; }
+.mb-eye3 { opacity: 0; transform: scale(0); }
+.mutating .mb-eye { animation: mb-throb 1.3s ease-in-out infinite; }
+.mb-name { transition: color 0.4s; }
+.mutating .mb-name { color: var(--mb-accent); }
+
+.mb-mut { width: min(260px, 90%); margin-top: 6px; }
+.mb-mut-bar { height: 8px; background: var(--mb-edge); border-radius: 99px; overflow: hidden; }
+.mb-mut-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--mb-accent), #9b5de5); border-radius: 99px; transition: width 0.2s; }
+.mb-mut-label { color: var(--mb-dim); font-size: 12px; margin-top: 3px; }
+
+/* mutation: the clones */
+.mb-clones { position: absolute; inset: 0; z-index: 0; --csz: 1; }
+.mb-clone {
+  position: absolute;
+  width: calc(54px * var(--sz) * var(--csz)); aspect-ratio: 1;
+  margin: calc(-27px * var(--sz) * var(--csz)) 0 0 calc(-27px * var(--sz) * var(--csz));
+  padding: 0; border: 3px solid var(--mb-gold); border-radius: 50%; overflow: hidden;
+  background: #000; opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  animation: mb-drift 4s ease-in-out infinite alternate;
+  transition: width 0.4s, height 0.4s, margin 0.4s;
+}
+.mb-clone img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; transform: scaleX(var(--flip)); }
+.mb-clone.boop img { animation: mb-boop 0.18s ease-out; }
+.mb-clones.warped .mb-clone { border-color: var(--mb-accent); }
+.mb-clones.warped .mb-clone img { filter: url(#mb-warp) hue-rotate(var(--hue)) saturate(1.6); }
+
+/* mutation: stage-up shake and the final form */
+.mb.shake { animation: mb-shake 0.5s; }
+.mb.eldritch { background: radial-gradient(ellipse at 50% 40%, #5a0f2a 0%, #14050c 70%); animation: mb-pulse 3s ease-in-out infinite; }
+.mb.eldritch .mb-ticker { color: #ff7b9c; letter-spacing: 0.5px; }
+.mb.eldritch .mb-face { border-color: #ff3d6e; box-shadow: 0 0 40px 10px rgba(255, 40, 90, 0.5), 0 0 0 4px var(--mb-edge); }
+.mb.eldritch .mb-glow { filter: hue-rotate(-50deg) brightness(1.6); animation-duration: 3s; }
 .mb-name { font-family: var(--mb-font); font-weight: 700; font-size: 18px; margin-top: 10px; color: var(--mb-gold); }
 
 .mb-float {
@@ -176,6 +229,7 @@
 /* toasts */
 .mb-toasts { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50; display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(92vw, 420px); pointer-events: none; }
 .mb-toast { background: var(--mb-edge); border: 2px solid var(--mb-gold); border-radius: 12px; padding: 8px 14px; font-weight: 600; text-align: center; animation: mb-in 0.25s ease-out; transition: opacity 0.4s, transform 0.4s; }
+.mb-toast.big { border-color: var(--mb-accent); background: #3a0f22; font-size: 16px; }
 .mb-toast.out { opacity: 0; transform: translateY(10px); }
 
 /* shiny bromeadow (appended to body) */
@@ -191,6 +245,14 @@
 .mb-shiny img { width: 100%; height: 100%; object-fit: cover; display: block; filter: sepia(1) saturate(3) hue-rotate(-12deg) brightness(1.15); pointer-events: none; }
 
 @keyframes mb-spin { to { transform: rotate(360deg); } }
+@keyframes mb-squish {
+  0%, 100% { transform: skewX(calc(var(--sk) * -1)) scale(calc(1 + var(--st)), calc(1 - var(--st))); }
+  50% { transform: skewX(var(--sk)) scale(calc(1 - var(--st)), calc(1 + var(--st))); }
+}
+@keyframes mb-throb { 0%, 100% { filter: none; } 50% { filter: brightness(1.15) contrast(1.1); } }
+@keyframes mb-drift { from { translate: -8px -6px; rotate: -10deg; } to { translate: 8px 6px; rotate: 10deg; } }
+@keyframes mb-shake { 0%, 100% { translate: 0 0; } 20% { translate: -6px 2px; } 40% { translate: 6px -2px; } 60% { translate: -4px 1px; } 80% { translate: 4px -1px; } }
+@keyframes mb-pulse { 0%, 100% { box-shadow: inset 0 0 40px rgba(255, 30, 80, 0.25); } 50% { box-shadow: inset 0 0 90px rgba(255, 30, 80, 0.55); } }
 @keyframes mb-wobble { 0%, 100% { rotate: -2deg; } 50% { rotate: 2deg; } }
 @keyframes mb-boop { 0% { transform: scale(1); } 40% { transform: scale(0.9) rotate(-3deg); } 100% { transform: scale(1); } }
 @keyframes mb-float { from { opacity: 1; transform: translate(-50%, -50%); } to { opacity: 0; transform: translate(-50%, -160%); } }
@@ -200,7 +262,7 @@
 @keyframes mb-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .mb-glow, .mb-face, .mb-shiny { animation: none; }
+  .mb-glow, .mb-face, .mb-shiny, .mutating .mb-flesh, .mutating .mb-eye, .mb-clone, .mb.eldritch, .mb.shake { animation: none; }
   .mb-shiny { animation: mb-fade 12s linear forwards; }
 }
 
@@ -220,8 +282,10 @@
   .mb-ticker { min-height: 0; padding: 6px 10px; font-size: 13px; margin-bottom: 6px; }
   .mb-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 6px; }
   .mb-stage { padding: 8px; }
-  .mb-face-wrap { width: clamp(100px, 22vh, 170px); }
+  .mb-face-wrap { --fw: clamp(90px, 19vh, 150px); }
   .mb-name { display: none; }
+  .mb-mut { margin-top: 4px; }
+  .mb-clone { width: calc(38px * var(--sz) * var(--csz)); margin: calc(-19px * var(--sz) * var(--csz)) 0 0 calc(-19px * var(--sz) * var(--csz)); }
   .mb-rate { margin-bottom: 6px; }
   .mb-buffs { min-height: 0; }
   .mb-row, .mb-upg { grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; padding: 6px 8px; }

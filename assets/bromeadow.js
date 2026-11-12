@@ -128,7 +128,10 @@
     ['Industrialist', 'Reach 1,000 Broms per second.', function (s) { return cps() >= 1e3; }],
     ['Engine Of Smug', 'Reach 1 million Broms per second.', function (s) { return cps() >= 1e6; }],
     ['Upgraded', 'Buy 10 upgrades.', function (s) { return s.upgrades.length >= 10; }],
-    ['Fully Bespoke', 'Buy 40 upgrades.', function (s) { return s.upgrades.length >= 40; }]
+    ['Fully Bespoke', 'Buy 40 upgrades.', function (s) { return s.upgrades.length >= 40; }],
+    ['It\'s Spreading', 'Make Mr Bromeadow copy himself.', function (s) { return mutStage(s.clicks) >= 2; }],
+    ['Do Not Look Directly At Him', 'Open the third eye.', function (s) { return mutStage(s.clicks) >= 6; }],
+    ['What Have You Done', 'Reach Eldritch Bromeadow.', function (s) { return mutStage(s.clicks) >= 9; }]
   ];
 
   var NEWS = [
@@ -153,10 +156,50 @@
     [1e14, 'The universe now runs on Broms. Physics departments cancel all lectures.']
   ];
 
+  // ---------- mutation ----------
+  // Pokes feed a mutation level. Each stage adds +10% production and makes
+  // Mr Bromeadow a little less Mr Bromeadow.
+  var MUTATIONS = [
+    [0,    'Mr Bromeadow',        ''],
+    [40,   'Slightly Swollen',    'He seems... bigger? Keep poking.'],
+    [120,  'Bromeadow ×2',        'He has started copying himself.'],
+    [250,  'Bulging',             'Something is happening with the eyes.'],
+    [450,  'Wobbly',              'His face has lost structural integrity.'],
+    [750,  'The Swarm',           'There are a lot of him now.'],
+    [1150, 'Third Eye Open',      'He can see your browser history.'],
+    [1700, 'Melting',             'Mr Bromeadow is becoming a liquid.'],
+    [2500, 'The Bromass',         'One face. Many faces. All faces.'],
+    [3600, 'Eldritch Bromeadow',  'Ph\'nglui mglw\'nafh Bromeadow.']
+  ];
+  var MUT_BONUS = 0.1;
+  var MUT_NEWS = [
+    [1, 'Witnesses describe Mr Bromeadow as "puffier than usual".'],
+    [2, 'Second Mr Bromeadow spotted. Both deny everything.'],
+    [3, 'Optician reports "unprecedented" eye measurements.'],
+    [4, 'Mr Bromeadow\'s face now classified as a non-Newtonian fluid.'],
+    [5, 'Town council asks residents to stop counting the Bromeadows.'],
+    [6, 'The third eye has started blinking out of sync. Experts uneasy.'],
+    [7, 'Mr Bromeadow politely asks for a mop.'],
+    [8, 'The Bromass has applied for planning permission.'],
+    [9, 'IT IS TOO LATE TO STOP POKING.'],
+    [9, 'The faces are humming. It sounds a bit like a sewing machine.']
+  ];
+  function mutStage(clicks) {
+    var st = 0;
+    for (var i = 0; i < MUTATIONS.length; i++) if (clicks >= MUTATIONS[i][0]) st = i;
+    return st;
+  }
+  // continuous level: stage + progress towards the next one
+  function mutLevel(clicks) {
+    var st = mutStage(clicks), lo = MUTATIONS[st][0];
+    var hi = st + 1 < MUTATIONS.length ? MUTATIONS[st + 1][0] : lo * 2;
+    return Math.min(st + (clicks - lo) / (hi - lo), MUTATIONS.length);
+  }
+
   // ---------- state ----------
 
   function fresh() {
-    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true };
+    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true, mutate: true, mstage: 0 };
   }
   var S = fresh();
   try {
@@ -180,7 +223,7 @@
     return m;
   }
   function prodMult(id) { var n = 0; S.upgrades.forEach(function (u) { if (UBY[u] && UBY[u].kind === 'prod' && UBY[u].target === id) n++; }); return Math.pow(2, n); }
-  function globalMult() { return Math.pow(1.25, count('global')) * (1 + ACH_BONUS * S.ach.length); }
+  function globalMult() { return Math.pow(1.25, count('global')) * (1 + ACH_BONUS * S.ach.length) * (1 + MUT_BONUS * mutStage(S.clicks)); }
   function producerCps(p) { return (S.owned[p.id] || 0) * p.cps * prodMult(p.id) * globalMult(); }
   function baseCps() { var t = 0; PRODUCERS.forEach(function (p) { t += producerCps(p); }); return t; }
   function cps() { return baseCps() * buffMult('cps'); }
@@ -216,6 +259,21 @@
 
   // ---------- DOM ----------
 
+  // Magnifier patches over parts of the photo (positions as fractions of the
+  // image). src = which pixels to show, dst = where to put them.
+  var FEATURES = [
+    { cls: 'eye',   src: [0.285, 0.57], dst: [0.285, 0.57], w: 0.2 },
+    { cls: 'eye',   src: [0.486, 0.50], dst: [0.486, 0.50], w: 0.2 },
+    { cls: 'eye3',  src: [0.486, 0.50], dst: [0.40, 0.30],  w: 0.18 },
+    { cls: 'mouth', src: [0.42, 0.80],  dst: [0.42, 0.80],  w: 0.3 }
+  ];
+  function featureHtml(f) {
+    var l = (f.dst[0] - f.w / 2) * 100, t = (f.dst[1] - f.w / 2) * 100;
+    var il = -(f.src[0] - f.w / 2) / f.w * 100, it = -(f.src[1] - f.w / 2) / f.w * 100;
+    return '<span class="mb-feat mb-' + f.cls + '" style="left:' + l + '%;top:' + t + '%;width:' + f.w * 100 + '%;height:' + f.w * 100 + '%">' +
+      '<img src="' + esc(FACE) + '" alt="" draggable="false" style="width:' + 100 / f.w + '%;left:' + il + '%;top:' + it + '%"></span>';
+  }
+
   document.body.classList.add('mb-page');
   root.innerHTML =
     '<div class="mb">' +
@@ -224,13 +282,15 @@
         '<section class="mb-stage">' +
           '<div class="mb-count"><span class="mb-num">0</span> <span class="mb-unit">Broms</span></div>' +
           '<div class="mb-rate">0 per second</div>' +
+          '<div class="mb-clones" aria-hidden="true"></div>' +
           '<div class="mb-face-wrap">' +
             '<div class="mb-glow"></div>' +
             '<button class="mb-face" type="button" aria-label="Poke Mr Bromeadow">' +
-              '<img src="' + esc(FACE) + '" alt="" draggable="false">' +
+              '<div class="mb-flesh"><img src="' + esc(FACE) + '" alt="" draggable="false">' + FEATURES.map(featureHtml).join('') + '</div>' +
             '</button>' +
           '</div>' +
           '<div class="mb-name">Mr Bromeadow</div>' +
+          '<div class="mb-mut"><div class="mb-mut-bar"><span></span></div><div class="mb-mut-label"></div></div>' +
           '<div class="mb-buffs"></div>' +
         '</section>' +
         '<section class="mb-side">' +
@@ -245,10 +305,14 @@
           '</div>' +
           '<div class="mb-pane" data-pane="upg" hidden><div class="mb-upgrades"></div><p class="mb-empty">Keep poking. Upgrades appear as you progress.</p></div>' +
           '<div class="mb-pane" data-pane="stats" hidden><div class="mb-stats"></div><h3>Achievements <span class="mb-achcount"></span></h3><div class="mb-achs"></div>' +
-            '<div class="mb-foot"><button class="mb-sound"></button> <button class="mb-reset">Reset game</button></div></div>' +
+            '<div class="mb-foot"><button class="mb-sound"></button> <button class="mb-mutate"></button> <button class="mb-reset">Reset game</button></div></div>' +
         '</section>' +
       '</div>' +
       '<div class="mb-toasts" aria-live="polite"></div>' +
+      '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="mb-warp" x="-15%" y="-15%" width="130%" height="130%">' +
+        '<feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="7" result="n"><animate attributeName="baseFrequency" dur="9s" values="0.009;0.02;0.009" repeatCount="indefinite"/></feTurbulence>' +
+        '<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/>' +
+      '</filter></svg>' +
     '</div>';
 
   function $(sel) { return root.querySelector(sel); }
@@ -256,6 +320,9 @@
   var elTicker = $('.mb-ticker'), elBuffs = $('.mb-buffs'), elShop = $('.mb-shop'), elUpg = $('.mb-upgrades');
   var elStats = $('.mb-stats'), elAchs = $('.mb-achs'), elToasts = $('.mb-toasts'), elBadge = $('.mb-badge');
   var mode = '1';
+  var elStage = $('.mb-stage'), elClones = $('.mb-clones'), elFlesh = $('.mb-flesh'), elName = $('.mb-name');
+  var elMutBar = $('.mb-mut-bar span'), elMutLabel = $('.mb-mut-label'), elDisp = root.querySelector('feDisplacementMap');
+  var elEyes = root.querySelectorAll('.mb-eye'), elEye3 = $('.mb-eye3'), elMouth = $('.mb-mouth');
 
   // shop rows
   var rows = {};
@@ -339,6 +406,16 @@
     earn(v);
     S.clicks++;
     S.clickEarned += v;
+    var st = mutStage(S.clicks);
+    if (st > S.mstage) {
+      S.mstage = st;
+      var m = MUTATIONS[st];
+      toast('🧬 Mutation: ' + m[1] + '! ' + m[2] + ' (+' + Math.round(MUT_BONUS * 100) + '% production)', true);
+      blip(220, 0.5, 'sawtooth', 0.04);
+      setTimeout(function () { blip(150, 0.6, 'sawtooth', 0.04); }, 180);
+      var mb = root.querySelector('.mb');
+      mb.classList.remove('shake'); void mb.offsetWidth; mb.classList.add('shake');
+    }
     blip(300 + Math.random() * 120, 0.08, 'sine', 0.05);
     elFace.classList.remove('boop');
     void elFace.offsetWidth;
@@ -412,14 +489,14 @@
 
   // ---------- toasts, ticker, stats ----------
 
-  function toast(msg) {
+  function toast(msg, big) {
     var t = document.createElement('div');
-    t.className = 'mb-toast';
+    t.className = 'mb-toast' + (big ? ' big' : '');
     t.textContent = msg;
     elToasts.appendChild(t);
-    while (elToasts.children.length > 3) elToasts.firstChild.remove();
-    setTimeout(function () { t.classList.add('out'); }, 3200);
-    setTimeout(function () { t.remove(); }, 3700);
+    while (elToasts.children.length > 3) (elToasts.querySelector('.mb-toast:not(.big)') || elToasts.firstChild).remove();
+    setTimeout(function () { t.classList.add('out'); }, big ? 5500 : 3200);
+    setTimeout(function () { t.remove(); }, big ? 6000 : 3700);
   }
 
   var lastNews = -1;
@@ -427,7 +504,12 @@
     var opts = [];
     NEWS.forEach(function (n, i) { if (S.total >= n[0]) opts.push(i); });
     var cnt = PRODUCERS.filter(function (p) { return S.owned[p.id]; });
-    var pick;
+    var pick, st = mutStage(S.clicks);
+    if (st >= 1 && S.mutate && Math.random() < 0.35) {
+      var mn = MUT_NEWS.filter(function (n) { return n[0] <= st; });
+      elTicker.textContent = mn[Math.floor(Math.random() * mn.length)][1];
+      return;
+    }
     if (cnt.length && Math.random() < 0.25) {
       var p = cnt[Math.floor(Math.random() * cnt.length)];
       elTicker.textContent = 'Mr Bromeadow now owns ' + S.owned[p.id] + ' ' + p.name + (S.owned[p.id] === 1 ? '' : 's') + '. He has not asked why.';
@@ -462,6 +544,7 @@
       ['Upgrades bought', S.upgrades.length + ' / ' + UPGRADES.length],
       ['Shiny Bromeadows caught', S.shinies],
       ['Achievement bonus', '+' + Math.round(ACH_BONUS * S.ach.length * 100) + '% production'],
+      ['Mutation', MUTATIONS[mutStage(S.clicks)][1] + ' (+' + Math.round(MUT_BONUS * mutStage(S.clicks) * 100) + '% production)'],
       ['Playing for', fmtTime(played)]
     ].map(function (r) { return '<div class="mb-stat"><span>' + r[0] + '</span><b>' + esc(r[1]) + '</b></div>'; }).join('');
     $('.mb-achcount').textContent = S.ach.length + ' / ' + ACHIEVEMENTS.length;
@@ -470,12 +553,15 @@
       return '<div class="mb-ach' + (got ? ' got' : '') + '" title="' + esc(a[1]) + '"><b>' + (got ? '🏅 ' : '🔒 ') + esc(a[0]) + '</b><span>' + esc(a[1]) + '</span></div>';
     }).join('');
     $('.mb-sound').textContent = S.sound ? '🔊 Sound on' : '🔇 Sound off';
+    $('.mb-mutate').textContent = S.mutate ? '🧬 Mutations shown' : '🙂 Keep him normal';
   }
+  $('.mb-mutate').addEventListener('click', function () { S.mutate = !S.mutate; save(); renderStats(); update(); });
   $('.mb-sound').addEventListener('click', function () { S.sound = !S.sound; save(); renderStats(); });
   $('.mb-reset').addEventListener('click', function () {
     if (!confirm('Reset everything? Mr Bromeadow will forget you ever met.')) return;
     S = fresh();
     buffs = [];
+    shownLevel = -1;
     shownUpgrades = null;
     save();
     refreshUpgrades();
@@ -483,9 +569,76 @@
     update();
   });
 
+  // ---------- mutation visuals ----------
+
+  var clones = [], shownLevel = -1;
+  function ramp(L, from, to) { return Math.max(0, Math.min(1, (L - from) / (to - from))); }
+  function addClone() {
+    var c = document.createElement('button');
+    c.type = 'button';
+    c.tabIndex = -1;
+    c.className = 'mb-clone';
+    c.innerHTML = '<img src="' + esc(FACE) + '" alt="" draggable="false">';
+    c.style.left = rand(2, 88) + '%';
+    c.style.top = rand(2, 88) + '%';
+    c.style.setProperty('--sz', rand(0.7, 1.3).toFixed(2));
+    c.style.setProperty('--hue', Math.floor(rand(-60, 60)) + 'deg');
+    c.style.setProperty('--flip', Math.random() < 0.5 ? -1 : 1);
+    c.style.animationDuration = rand(2.5, 6).toFixed(1) + 's';
+    c.style.animationDelay = (-rand(0, 5)).toFixed(1) + 's';
+    c.addEventListener('pointerdown', function (e) {
+      if (e.button !== undefined && e.button !== 0) return;
+      e.preventDefault();
+      poke(e.clientX, e.clientY);
+      c.classList.remove('boop'); void c.offsetWidth; c.classList.add('boop');
+    });
+    elClones.appendChild(c);
+    clones.push(c);
+  }
+  function renderMutation() {
+    var L = S.mutate ? mutLevel(S.clicks) : 0;
+    var st = mutStage(S.clicks);
+    var next = MUTATIONS[st + 1];
+    elName.textContent = st ? 'Mr Bromeadow · ' + MUTATIONS[st][1] : 'Mr Bromeadow';
+    elMutBar.style.width = (next ? (S.clicks - MUTATIONS[st][0]) / (next[0] - MUTATIONS[st][0]) * 100 : 100) + '%';
+    elMutLabel.textContent = next ? 'Mutation ' + st + '/' + (MUTATIONS.length - 1) + ' · ' + (next[0] - S.clicks) + ' pokes to the next' : 'Fully mutated. There is no going back.';
+    if (Math.abs(L - shownLevel) < 0.004) return;
+    shownLevel = L;
+
+    // 1. he grows a little with every poke
+    var grow = 1 + 0.3 * Math.pow(Math.min(S.mutate ? S.clicks : 0, 2500) / 2500, 0.6);
+    elWrap.style.setProperty('--grow', grow.toFixed(4));
+    // 2. clones
+    var want = L < 2 ? 0 : Math.min(28, Math.floor((L - 2) * 3.5) + 1);
+    while (clones.length < want) addClone();
+    while (clones.length > want) clones.pop().remove();
+    elClones.style.setProperty('--csz', (1 + ramp(L, 5, 9) * 0.8).toFixed(3));
+    // 3. eyes bulge, third eye opens, mouth stretches
+    var bulge = 1 + ramp(L, 3, 9) * 1.3;
+    elEyes.forEach(function (e) { e.style.transform = 'scale(' + bulge.toFixed(3) + ')'; });
+    var e3 = ramp(L, 6, 6.6);
+    elEye3.style.opacity = e3;
+    elEye3.style.transform = 'scale(' + (e3 * bulge).toFixed(3) + ')';
+    var mw = ramp(L, 7, 9);
+    elMouth.style.transform = 'scale(' + (1 + mw * 1.2).toFixed(3) + ',' + (1 + mw * 0.5).toFixed(3) + ')';
+    // 4. wobble, warp, colour
+    elFlesh.style.setProperty('--sk', (ramp(L, 4, 9) * 9).toFixed(2) + 'deg');
+    elFlesh.style.setProperty('--st', (ramp(L, 4, 9) * 0.14).toFixed(3));
+    var warp = ramp(L, 4, 9) * 38;
+    elDisp.setAttribute('scale', warp.toFixed(1));
+    var hue = ramp(L, 7, 10) * 70, sat = 1 + ramp(L, 7, 10) * 0.8;
+    var filt = (warp > 0.5 ? 'url(#mb-warp) ' : '') + (hue > 0.5 ? 'hue-rotate(' + hue.toFixed(0) + 'deg) saturate(' + sat.toFixed(2) + ')' : '');
+    elFlesh.style.filter = filt || 'none';
+    elClones.classList.toggle('warped', L >= 4);
+    var mb = root.querySelector('.mb');
+    mb.classList.toggle('mutating', L >= 4);
+    mb.classList.toggle('eldritch', L >= 9);
+  }
+
   // ---------- update loop ----------
 
   function update() {
+    renderMutation();
     elNum.textContent = fmtWords(S.broms);
     var c = cps();
     elRate.textContent = fmt(c, true) + ' per second · ' + fmt(clickValue(), true) + ' per poke';
@@ -557,6 +710,7 @@
     }
   }
 
+  S.mstage = Math.max(S.mstage || 0, mutStage(S.clicks));
   offline();
   refreshUpgrades();
   update();
