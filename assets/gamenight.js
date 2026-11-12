@@ -260,7 +260,7 @@
       title: 'The dishwasher',
       chat: [['mork', "Can play once I've put the dishwasher on & tidied up"], ['mork', 'The dishwasher never gets put on']],
       choices: [
-        { label: 'Help him load it over video', sub: 'Mini-game: tap the plates', game: 'dishes',
+        { label: 'Help him load it over video', sub: 'Mini-game: load the dishwasher', game: 'dishes',
           ok: { p: 14, v: 5, re: [['mork', 'Right, done. Ten minutes']] },
           bad: { p: 4, v: -2, t: 15, re: [['mork', 'Still going…']] } },
         { label: "Remind him nothing can reach him once he's on", say: "once you're on, phone in a drawer and nobody can get you", p: 5, v: 4,
@@ -325,7 +325,7 @@
       choices: [
         { label: 'Let it go', say: 'fine, keep it', set: 'swords', p: 3, v: 3, steals: 1, easy: 1,
           re: [['tom', 'You\'re a gent. Have these instead'], ['sys', 'TOM dropped: 3 white pistols']] },
-        { label: 'Grab the next one first', sub: 'Mini-game: reaction', game: 'grab',
+        { label: 'Scramble for the loot', sub: 'Mini-game: loot scramble', game: 'grab',
           ok: { p: 10, v: 2, re: [['tom', "Nice! That one's yours"]] },
           bad: { p: 0, v: -8, t: 15, steals: 1, re: [['tom', 'Got it! Holding onto it for you ❤️']] } }
       ] },
@@ -336,7 +336,7 @@
       choices: [
         { label: 'Hold onto it for him', say: "I'll hold onto it for you", set: 'swords', p: 3, v: 3, steals: 1,
           re: [['don', '…ok'], ['sys', 'TOM dropped: 3 white pistols']] },
-        { label: 'Grab it first', sub: 'Mini-game: reaction', game: 'grab',
+        { label: 'Scramble for it', sub: 'Mini-game: loot scramble', game: 'grab',
           ok: { p: 2, v: 2, steals: 1, re: [['don', 'how are you that fast']] },
           bad: { p: 4, v: 4, re: [['don', 'got it!']] } },
         { label: 'Let Don have it', p: 6, v: 4, re: [['don', 'oh. thanks?']] }
@@ -375,16 +375,18 @@
       title: 'Power failure',
       chat: [['sys', 'POWER FAILURE: fuse blown'], ['pal', { don: 'Sorry! Plugged something in', tom: 'sorry. plugged something in' }]],
       choices: [
-        { label: 'Fix it', sub: 'Risky', risk: 0.6, ok: { p: 4, v: 6, re: [['sys', 'Power restored']] }, bad: { p: 0, v: -4, t: 15, re: [['sys', 'POWER FAILURE: fuse blown']] } },
+        { label: 'Take charge of the power', sub: 'Mini-game: keep the lights on', game: 'power',
+          ok: { p: 6, v: 8, re: [['sys', 'Power restored'], ['pal', { don: "You're a natural", tom: 'nice one' }]] },
+          bad: { p: 0, v: -4, t: 15, re: [['sys', 'POWER FAILURE: fuse blown']] } },
         { label: 'Build more coal generators', p: 2, v: 2, re: [['pal', { don: 'More coal! Love it', tom: 'more coal' }]] }
       ] },
     { id: 'wander', game: 'bigwalk', who: ['tom', 'don'],
       title: { don: 'Where has Tom gone?', tom: 'You know a shortcut' },
       chat: { don: [['tom', 'I know a shortcut'], ['sys', 'Tom is very far away']], tom: [['me', 'I know a shortcut'], ['don', 'tom no']] },
       choices: [
-        { label: { don: 'Shout for him', tom: 'Take the shortcut' }, sub: 'Risky', risk: 0.5,
-          ok: { p: 4, v: 8, re: { don: [['tom', '(very faint) FOUND A GOOD BIT']], tom: [['don', 'how are you up there']] } },
-          bad: { p: 0, v: -4, t: 15, re: { don: [['sys', 'Tom is no longer visible']], tom: [['don', 'we can see you. you are in a river']] } } },
+        { label: { don: 'Go and find him', tom: 'Take the shortcut' }, sub: 'Mini-game: hot and cold', game: 'shout',
+          ok: { p: 4, v: 10, re: { don: [['tom', 'There you are! Look at this view']], tom: [['don', 'there you are'], ['don', 'how did you get up there']] } },
+          bad: { p: 0, v: -4, t: 15, re: { don: [['sys', 'Tom is no longer visible']], tom: [['don', "we've finished the walk. where are you"]] } } },
         { label: { don: 'Walk on without him', tom: 'Stick with Don' }, p: 2, v: 2, easy: { don: 1 },
           re: { don: [['sys', "Tom's last message: 'brb'"]], tom: [['don', 'cheers']] } }
       ] },
@@ -450,6 +452,9 @@
       text: 'Your spare had a bit of wear on the left ear.',
       choices: [
         { label: 'Close the app', p: 4, v: 4, steals: 1, easy: 1 },
+        { label: 'Bid on it', sub: 'Mini-game: auction', game: 'auction',
+          ok: { p: 4, v: 8, re: [['tom', 'Ooh, what did you win?']] },
+          bad: { p: 2, v: -2, steals: 1, re: [['tom', 'Did you get anything nice on eBay?']] } },
         { label: "Ask Tom how the headset's working out", say: "how's the headset working out", p: 4, v: 2, re: [['tom', 'Brilliant! Honestly, game changer ❤️'], ['tom', 'Why?']] }
       ] },
     { id: 'ebay_t', req: 'ebay', as: 'tom', who: ['tom', 'don'],
@@ -482,7 +487,7 @@
       title: 'Tom is excited',
       chat: [['tom', "SO excited for tonight. Haven't played in ages"], ['tom', "I've made a banner"]],
       choices: [
-        { label: 'Calm Tom down', sub: 'Mini-game: hold and release', game: 'breathe',
+        { label: 'Calm Tom down', sub: 'Mini-game: breathing', game: 'breathe',
           ok: { p: 2, v: 10, set: 'banner', re: [['tom', 'Ok. Breathing. Saving the banner for later']] },
           bad: { p: 0, v: 1, re: [['tom', 'I AM SO CALM']] } },
         { label: 'Let him run with it', p: -4, v: -6, re: [['tom', 'Right, a quick speech'], ['sys', 'Tom is typing… (4 minutes)']] }
@@ -561,7 +566,7 @@
       title: "You're excited",
       chat: [['me', "SO excited for tonight. Haven't played in ages"], ['me', "I've made a banner"], ['don', 'mate']],
       choices: [
-        { label: 'Breathe', sub: 'Mini-game: hold and release', game: 'breathe',
+        { label: 'Breathe', sub: 'Mini-game: breathing', game: 'breathe',
           ok: { p: 2, v: 10, set: 'banner', re: [['me', 'Ok. Saving the banner for later']] },
           bad: { p: 0, v: 1, re: [['me', 'I AM SO CALM']] } },
         { label: 'Write a quick speech', p: -4, v: -6, re: [['sys', 'Tom is typing… (4 minutes)'], ['don', 'oh no']] }
@@ -1272,7 +1277,7 @@
   function renderResult() {
     var r = g.result;
     renderMeters();
-    var chips = (r.mini ? '<span class="gn-chip ' + (r.mini.win ? 'good">MINI-GAME WON' : 'bad">MINI-GAME LOST') + '</span>' : '') +
+    var chips = (r.mini ? '<span class="gn-chip ' + (r.mini.great ? 'good">PERFECT' : r.mini.win ? 'good">MINI-GAME WON' : 'bad">MINI-GAME LOST') + '</span>' : '') +
       chip('READY', r.p, true) + chip('VIBES', r.v, true);
     if (r.mins > ROUND_MIN) chips += '<span class="gn-chip bad">+' + (r.mins - ROUND_MIN) + ' MIN LOST</span>';
     if (r.d) chips += '<span class="gn-chip neutral">KICK-OFF +' + r.d + ' MIN</span>';
@@ -1487,234 +1492,639 @@
   }
 
   // ---------- mini-games ----------
-  // Each one draws itself into the card, calls done(win, note) once, and
-  // returns a cleanup function that stops its timers.
+  // Each game has a title, its rules, and play(box, done). play draws the game
+  // into box, calls done(win, note, great) once, and returns a cleanup
+  // function that stops its timers. Every game opens on a rules card with a
+  // START button, so nobody's caught out. A great win is worth a bit extra.
 
   var mini = null;
   function $(id) { return document.getElementById(id); }
   function now() { return window.performance && performance.now ? performance.now() : Date.now(); }
+  function pickOne(a) { return a[Math.floor(Math.random() * a.length)]; }
+  function asTom() { return g.player === 'tom'; }
+  function palName() { return nameOf(palOf(g.player)); }
 
   function startMini(choice) {
-    var finished = false;
-    mini = {};
-    mini.cleanup = MINI[choice.game](function (win, note) {
-      if (finished) return;
-      finished = true;
-      if (mini && mini.cleanup) mini.cleanup();
-      mini = null;
-      g.stats.miniPlayed++;
-      if (win) g.stats.miniWon++;
-      resolve(win ? choice.ok : choice.bad, { win: win, note: note || '' }, choice.say);
+    var spec = MINI[choice.game], finished = false;
+    mini = { cleanup: null };
+    elCard.innerHTML = '<div class="gn-mini"><h2>' + spec.title() + '</h2><div class="gn-rules">' + spec.rules() + '</div>' +
+      '<button type="button" class="gn-btn gn-go gn-big" id="gn-start">START</button></div>';
+    elCard.scrollTop = 0;
+    var go = $('gn-start');
+    go.focus();
+    go.addEventListener('click', function () {
+      elCard.innerHTML = '<div class="gn-mini" id="gn-play"></div>';
+      var stop = spec.play($('gn-play'), function (win, note, great) {
+        if (finished) return;
+        finished = true;
+        if (mini && mini.cleanup) mini.cleanup();
+        mini = null;
+        g.stats.miniPlayed++;
+        if (win) g.stats.miniWon++;
+        var out = settle(win ? choice.ok : choice.bad);
+        if (win && great) { out.p = (out.p || 0) + 4; out.v = (out.v || 0) + 4; }
+        resolve(out, { win: win, great: !!(win && great), note: note || '' }, choice.say);
+      });
+      if (mini) mini.cleanup = stop;
+      else if (stop) stop();
     });
   }
 
+  var TIMER = '<div class="gn-bar gn-wide gn-timer"><i id="gn-time"></i></div>';
+
   // drains the #gn-time bar over ms, then calls onEnd
   function countdown(ms, onEnd) {
-    var t0 = now(), raf, el = $('gn-time');
+    var t0 = now(), raf, el = $('gn-time'), stopped = false;
     (function tick() {
+      if (stopped) return;
       var left = 1 - (now() - t0) / ms;
       if (el) el.style.width = Math.max(0, left * 100) + '%';
       if (left <= 0) { onEnd(); return; }
       raf = window.requestAnimationFrame(tick);
     })();
-    return function () { window.cancelAnimationFrame(raf); };
+    return function () { stopped = true; window.cancelAnimationFrame(raf); };
+  }
+  function timeLeft(t0, ms) { return Math.max(0, ms - (now() - t0)); }
+  // a looping animation frame with a time step in seconds
+  function frames(fn) {
+    var last = now(), raf, stopped = false;
+    (function tick() {
+      if (stopped) return;
+      var t = now(), dt = Math.min(0.05, (t - last) / 1000);
+      last = t;
+      fn(dt, t);
+      raf = window.requestAnimationFrame(tick);
+    })();
+    return function () { stopped = true; window.cancelAnimationFrame(raf); };
   }
 
   var MINI = {};
 
-  // Timber! — tap CHOP enough times before the clock runs out
-  MINI.timber = function (done) {
-    var TAPS = 20, taps = 0, t0 = now();
-    elCard.innerHTML =
-      '<div class="gn-mini"><h2>TIMBER!</h2><p>Tap CHOP ' + TAPS + ' times before the tree wins.</p>' +
-      '<div class="gn-bar gn-wide gn-timer"><i id="gn-time"></i></div>' +
-      '<button class="gn-btn gn-big" id="gn-act">CHOP</button>' +
-      '<div class="gn-bar gn-wide"><i id="gn-prog" style="width:0"></i></div>' +
-      '<p id="gn-info">0 / ' + TAPS + '</p></div>';
-    var btn = $('gn-act');
-    btn.focus();
-    btn.addEventListener('click', function () {
-      taps++;
-      $('gn-prog').style.width = Math.min(100, taps / TAPS * 100) + '%';
-      $('gn-info').textContent = taps + ' / ' + TAPS;
-      btn.classList.remove('hit');
-      void btn.offsetWidth;
-      btn.classList.add('hit');
-      if (taps >= TAPS) done(true, 'Felled in ' + ((now() - t0) / 1000).toFixed(1) + ' seconds.');
-    });
-    return countdown(5000, function () { done(false, taps + ' / ' + TAPS + ' chops. The tree stands.'); });
-  };
-
-  // Catch him typing — stop a sweeping marker inside Mork's "typing…" window
-  MINI.typing = function (done) {
-    var hits = 0, misses = 0, pos = 0, dir = 1, speed = 0.75, zone, last = now(), raf, flashT;
-    elCard.innerHTML =
-      '<div class="gn-mini"><h2>CATCH HIM TYPING</h2>' +
-      "<p>Mork's 'typing…' flickers on and off. Hit SEND while the marker is inside his window. Two hits and you have him; two misses and he's gone.</p>" +
-      '<div class="gn-track" id="gn-track"><b id="gn-zone">typing…</b><i id="gn-mark"></i></div>' +
-      '<p id="gn-info">Hits 0 · Misses 0</p>' +
-      '<button class="gn-btn gn-big" id="gn-act">SEND</button></div>';
-    var mark = $('gn-mark'), zoneEl = $('gn-zone'), track = $('gn-track'), btn = $('gn-act');
-    function newZone() {
-      var w = 0.24 - hits * 0.06;
-      zone = { x: 0.04 + Math.random() * (0.92 - w), w: w };
-      zoneEl.style.left = zone.x * 100 + '%';
-      zoneEl.style.width = zone.w * 100 + '%';
-    }
-    newZone();
-    (function tick() {
-      var t = now(), dt = Math.min(0.05, (t - last) / 1000);
-      last = t;
-      pos += dir * speed * dt;
-      if (pos > 1) { pos = 1; dir = -1; }
-      if (pos < 0) { pos = 0; dir = 1; }
-      mark.style.left = pos * 100 + '%';
-      raf = window.requestAnimationFrame(tick);
-    })();
-    btn.focus();
-    btn.addEventListener('click', function () {
-      var hit = pos >= zone.x && pos <= zone.x + zone.w;
-      if (hit) hits++; else misses++;
-      track.className = 'gn-track ' + (hit ? 'hit' : 'miss');
-      window.clearTimeout(flashT);
-      flashT = window.setTimeout(function () { track.className = 'gn-track'; }, 300);
-      $('gn-info').textContent = (hit ? 'Delivered! ' : 'He stopped typing. ') + 'Hits ' + hits + ' · Misses ' + misses;
-      if (hits >= 2) { done(true, 'Both messages landed while he was typing. He felt seen.'); return; }
-      if (misses >= 2) { done(false, "Both messages arrived while he wasn't looking."); return; }
-      speed *= 1.35;
-      newZone();
-    });
-    return function () { window.cancelAnimationFrame(raf); window.clearTimeout(flashT); };
-  };
-
-  // Grab it — reaction test against Tom's hands
-  MINI.grab = function (done) {
-    var shown = false, t0 = 0, waitT, loseT, LIMIT = 600;
-    elCard.innerHTML =
-      '<div class="gn-mini"><h2>GRAB IT</h2>' +
-      (g.player === 'tom' ? "<p>A legendary is about to drop. Tap GRAB the moment it appears. Too early and Don gets there first.</p>"
-        : "<p>Another legendary is about to drop. Tap GRAB the moment it appears. Too early and Tom will hold onto it for you.</p>") +
-      '<div class="gn-arena" id="gn-arena"><span>WAIT FOR IT…</span></div>' +
-      '<button class="gn-btn gn-big" id="gn-act">GRAB</button></div>';
-    var arena = $('gn-arena'), btn = $('gn-act');
-    btn.focus();
-    waitT = window.setTimeout(function () {
-      shown = true;
-      t0 = now();
-      arena.innerHTML = sprite(SWORD, 6);
-      arena.classList.add('drop');
-      loseT = window.setTimeout(function () { done(false, g.player === 'tom' ? 'Too slow. Don picks it up without even looking.' : "Too slow. Tom's already holding onto it for you."); }, LIMIT);
-    }, 1200 + Math.random() * 2300);
-    btn.addEventListener('click', function () {
-      if (!shown) { done(false, g.player === 'tom' ? 'Too early. You grab thin air. Don picks it up, puzzled.' : "Too early. Tom picks it up and says he'll hold onto it for you."); return; }
-      done(true, 'Grabbed in ' + Math.round(now() - t0) + ' ms. ' + (g.player === 'tom' ? 'Don applauds, unsure why.' : 'Tom applauds, sincerely.'));
-    });
-    return function () { window.clearTimeout(waitT); window.clearTimeout(loseT); };
-  };
-
-  // Dishwasher dash — tap the plates before they go
-  MINI.dishes = function (done) {
-    var NEED = 10, MS = 9000, loaded = 0, spawnT, hideT = {}, t0 = now();
-    var html = '<div class="gn-mini"><h2>DISHWASHER DASH</h2><p>Mork is on video, loading. Tap each dirty plate before it slides away. ' +
-      NEED + ' plates and he is free.</p><div class="gn-bar gn-wide gn-timer"><i id="gn-time"></i></div><div class="gn-grid" id="gn-grid">';
-    for (var i = 0; i < 9; i++) html += '<button type="button" class="gn-slot" data-slot="' + i + '" aria-label="Empty rack"></button>';
-    elCard.innerHTML = html + '</div><p id="gn-info">0 / ' + NEED + ' plates</p></div>';
-    var grid = $('gn-grid'), slots = grid.children;
-    function clear(k) {
-      window.clearTimeout(hideT[k]);
-      slots[k].classList.remove('on');
-      slots[k].setAttribute('aria-label', 'Empty rack');
-    }
-    function spawn() {
-      var empty = [];
-      for (var j = 0; j < slots.length; j++) if (!slots[j].classList.contains('on')) empty.push(j);
-      if (empty.length) {
-        var k = empty[Math.floor(Math.random() * empty.length)];
-        slots[k].classList.add('on');
-        slots[k].setAttribute('aria-label', 'Dirty plate');
-        hideT[k] = window.setTimeout(function () { clear(k); }, 1150);
+  // ----- Catch him typing: send while he's typing, never while the boss is looking -----
+  MINI.typing = {
+    title: function () { return 'CATCH HIM TYPING'; },
+    rules: function () {
+      return "<p>Mork's typing comes and goes. Hit SEND while the marker is in the green <b>typing…</b> window.</p>" +
+        "<p>Never send while it's in the red <b>BOSS</b> window. His boss is reading over his shoulder.</p>" +
+        "<p>Three good sends and he's yours. Three mistakes and he's gone.</p>";
+    },
+    play: function (box, done) {
+      var hits = 0, bad = 0, pos = 0, dir = 1, speed = 0.55, green, red, flashT;
+      box.innerHTML = '<h2>CATCH HIM TYPING</h2>' + TIMER +
+        '<div class="gn-track" id="gn-track"><b class="ok" id="gn-zone">typing…</b><b class="boss" id="gn-boss">BOSS</b><i id="gn-mark"></i></div>' +
+        '<p id="gn-info">Sent 0 / 3 · Mistakes 0 / 3</p><button type="button" class="gn-btn gn-big" id="gn-act">SEND</button>';
+      var mark = $('gn-mark'), zoneEl = $('gn-zone'), bossEl = $('gn-boss'), track = $('gn-track'), btn = $('gn-act');
+      function place(el, z) {
+        el.style.display = z ? '' : 'none';
+        if (z) { el.style.left = z.x * 100 + '%'; el.style.width = z.w * 100 + '%'; }
       }
-      spawnT = window.setTimeout(spawn, 360 + Math.random() * 320);
+      function layout() {
+        var w = 0.22 - hits * 0.04;
+        green = { x: 0.03 + Math.random() * (0.94 - w), w: w };
+        red = null;
+        if (hits > 0 || Math.random() < 0.5) {
+          // the boss sits somewhere that doesn't overlap the green window
+          var rw = 0.16 + hits * 0.04, x, tries = 0;
+          do { x = 0.02 + Math.random() * (0.96 - rw); tries++; } while (tries < 30 && x < green.x + green.w + 0.03 && x + rw > green.x - 0.03);
+          if (tries < 30) red = { x: x, w: rw };
+        }
+        place(zoneEl, green);
+        place(bossEl, red);
+      }
+      function inside(z) { return !!z && pos >= z.x && pos <= z.x + z.w; }
+      layout();
+      var stopFrames = frames(function (dt) {
+        pos += dir * speed * dt;
+        if (pos > 1) { pos = 1; dir = -1; }
+        if (pos < 0) { pos = 0; dir = 1; }
+        mark.style.left = pos * 100 + '%';
+      });
+      btn.focus();
+      btn.addEventListener('click', function () {
+        var good = inside(green), msg;
+        if (good) { hits++; msg = 'Delivered while he was typing. '; }
+        else if (inside(red)) { bad++; msg = 'The boss saw that. '; }
+        else { bad++; msg = "He'd stopped typing. "; }
+        track.className = 'gn-track ' + (good ? 'hit' : 'miss');
+        window.clearTimeout(flashT);
+        flashT = window.setTimeout(function () { track.className = 'gn-track'; }, 300);
+        $('gn-info').textContent = msg + 'Sent ' + hits + ' / 3 · Mistakes ' + bad + ' / 3';
+        if (hits >= 3) { done(true, bad ? 'Three messages landed. He replied to all of them, properly.' : 'Three for three. Mork replies with a whole paragraph.', bad === 0); return; }
+        if (bad >= 3) { done(false, "He's gone into a meeting. He'll reply properly in about an hour."); return; }
+        speed *= 1.2;
+        layout();
+      });
+      var stop = countdown(20000, function () { done(false, 'Out of time. Mork: "Sorry, only just seen this"'); });
+      return function () { stop(); stopFrames(); window.clearTimeout(flashT); };
     }
-    grid.addEventListener('click', function (e) {
-      var b = e.target.closest ? e.target.closest('.gn-slot') : null;
-      if (!b || !b.classList.contains('on')) return;
-      clear(+b.getAttribute('data-slot'));
-      loaded++;
-      $('gn-info').textContent = loaded + ' / ' + NEED + ' plates';
-      if (loaded >= NEED) done(true, 'Loaded with ' + Math.max(0, (MS - (now() - t0)) / 1000).toFixed(1) + ' seconds to spare.');
-    });
-    spawn();
-    var stop = countdown(MS, function () { done(false, loaded + ' / ' + NEED + ' plates. A pan remains. There is always a pan.'); });
-    return function () {
-      stop();
-      window.clearTimeout(spawnT);
-      Object.keys(hideT).forEach(function (k) { window.clearTimeout(hideT[k]); });
-    };
   };
 
-  // Breathe with Tom — hold to grow the circle, release inside the gold ring
-  MINI.breathe = function (done) {
-    var GROW = 2200, MAX = 1.08, LO = 0.66, HI = 0.86, good = 0, bad = 0, holding = false, t0 = 0, size = 0, raf;
-    elCard.innerHTML =
-      '<div class="gn-mini"><h2>' + (g.player === 'tom' ? 'BREATHE, TOM' : 'BREATHE WITH TOM') + '</h2>' +
-      '<p>Hold the button to breathe in. Let go while the circle is inside the gold ring. Two good breaths and ' + (g.player === 'tom' ? 'you are' : 'Tom is') + ' calm.</p>' +
-      '<div class="gn-lung"><b></b><i id="gn-breath"></i></div>' +
-      '<p id="gn-info">Good 0 · Bad 0</p>' +
-      '<button type="button" class="gn-btn gn-big gn-hold" id="gn-act">HOLD</button></div>';
-    var btn = $('gn-act'), circle = $('gn-breath');
-    function draw() {
-      circle.style.transform = 'translate(-50%, -50%) scale(' + size + ')';
-      circle.className = holding ? (size >= LO && size <= HI ? 'grow in' : 'grow') : '';
+  // ----- Load the dishwasher: plates, mugs, the pan, and not the bear -----
+  MINI.dishes = {
+    title: function () { return 'LOAD THE DISHWASHER'; },
+    rules: function () {
+      return '<p>Mork is on video, loading the dishwasher. Tap things to load them before they slide away.</p>' +
+        "<p>🍽️ and ☕ take one tap. 🍳 takes three. It's the pan.</p>" +
+        "<p>Don't tap 🧸. That belongs to the little one.</p>" +
+        '<p>Load 22 before the timer runs out. Three mistakes and he gives up.</p>';
+    },
+    play: function (box, done) {
+      var NEED = 22, MS = 16000, loaded = 0, bad = 0, spawnT, items = {}, t0 = now();
+      var KINDS = [
+        { k: 'plate', e: '🍽️', taps: 1, life: 1300, w: 5 },
+        { k: 'mug', e: '☕', taps: 1, life: 950, w: 3 },
+        { k: 'pan', e: '🍳', taps: 3, life: 2600, w: 2, worth: 3 },
+        { k: 'toy', e: '🧸', taps: 0, life: 1400, w: 3 }
+      ];
+      var html = '<h2>LOAD THE DISHWASHER</h2>' + TIMER + '<div class="gn-grid gn-grid4" id="gn-grid">';
+      for (var i = 0; i < 12; i++) html += '<button type="button" class="gn-slot" data-slot="' + i + '" aria-label="Empty rack"></button>';
+      box.innerHTML = html + '</div><p id="gn-info">Loaded 0 / ' + NEED + ' · Mistakes 0 / 3</p>';
+      var slots = $('gn-grid').children;
+      function info(extra) { $('gn-info').textContent = (extra || '') + 'Loaded ' + Math.min(loaded, NEED) + ' / ' + NEED + ' · Mistakes ' + bad + ' / 3'; }
+      function clear(k) {
+        if (items[k]) { window.clearTimeout(items[k].t); delete items[k]; }
+        slots[k].className = 'gn-slot';
+        slots[k].innerHTML = '';
+        slots[k].setAttribute('aria-label', 'Empty rack');
+      }
+      function draw(k) {
+        var it = items[k];
+        slots[k].innerHTML = it.kind.e + (it.kind.taps > 1 ? '<small>' + it.left + '</small>' : '');
+      }
+      function spawn() {
+        var empty = [];
+        for (var j = 0; j < slots.length; j++) if (!items[j]) empty.push(j);
+        if (empty.length) {
+          var k = pickOne(empty), total = 0, r, kind;
+          KINDS.forEach(function (x) { total += x.w; });
+          r = Math.random() * total;
+          for (var n = 0; n < KINDS.length; n++) { r -= KINDS[n].w; if (r < 0) { kind = KINDS[n]; break; } }
+          kind = kind || KINDS[0];
+          items[k] = { kind: kind, left: kind.taps, t: window.setTimeout(function () { clear(k); }, kind.life) };
+          slots[k].className = 'gn-slot on gn-' + kind.k;
+          slots[k].setAttribute('aria-label', kind.k === 'toy' ? 'Teddy bear' : kind.k);
+          draw(k);
+        }
+        var hurry = Math.min(160, (now() - t0) / 60);
+        spawnT = window.setTimeout(spawn, 420 + Math.random() * 300 - hurry);
+      }
+      $('gn-grid').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('.gn-slot') : null;
+        if (!b) return;
+        var k = +b.getAttribute('data-slot'), it = items[k];
+        if (!it) return;
+        if (it.kind.k === 'toy') {
+          bad++;
+          clear(k);
+          info("That's the bear. ");
+          if (bad >= 3) done(false, "Three mistakes. Mork is sitting on the kitchen floor holding the bear.");
+          return;
+        }
+        it.left--;
+        if (it.left > 0) { draw(k); b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit'); return; }
+        loaded += it.kind.worth || 1;
+        clear(k);
+        info();
+        if (loaded >= NEED) {
+          var spare = timeLeft(t0, MS) / 1000;
+          done(true, 'Loaded with ' + spare.toFixed(1) + ' seconds to spare.' + (bad === 0 ? ' Not a single bear.' : ''), bad === 0 && spare >= 3);
+        }
+      });
+      spawn();
+      var stop = countdown(MS, function () { done(false, Math.min(loaded, NEED) + ' / ' + NEED + '. A pan remains. There is always a pan.'); });
+      return function () {
+        stop();
+        window.clearTimeout(spawnT);
+        Object.keys(items).forEach(function (k) { window.clearTimeout(items[k].t); });
+      };
     }
-    function tick() {
-      size = Math.min(MAX, (now() - t0) / GROW);
+  };
+
+  // ----- Loot scramble: grab the good stuff before Tom "holds onto it for you" -----
+  var RARITY = [
+    { k: 'white', n: 'White', v: 1, w: 40 }, { k: 'green', n: 'Green', v: 2, w: 28 }, { k: 'blue', n: 'Blue', v: 3, w: 18 },
+    { k: 'purple', n: 'Purple', v: 5, w: 10 }, { k: 'orange', n: 'Legendary', v: 10, w: 6 }
+  ];
+  MINI.grab = {
+    title: function () { return 'LOOT SCRAMBLE'; },
+    rules: function () {
+      var key = RARITY.map(function (r) { return '<span class="gn-r-' + r.k + '">' + r.n + ' ' + r.v + '</span>'; }).join(' ');
+      return asTom()
+        ? "<p>A chest has burst and Don's right next to it. Don is not very quick.</p><p>Tap loot to grab it. Better loot is worth more: " + key + '</p><p>Don goes for the best thing on screen, eventually. Finish with more than him.</p>'
+        : '<p>A chest has burst. Loot is raining down, and Tom is very quick.</p><p>Tap loot to grab it before he does. Better loot is worth more: ' + key + "</p><p>Tom always goes for the best thing on screen. Finish with more than him.</p>";
+    },
+    play: function (box, done) {
+      var MS = 15000, mine = 0, theirs = 0, myOrange = 0, items = {}, spawnT;
+      var rival = asTom() ? { name: 'Don', delay: 700 } : { name: 'Tom', delay: 450 };
+      var html = '<h2>LOOT SCRAMBLE</h2>' + TIMER + '<div class="gn-grid gn-loot" id="gn-grid">';
+      for (var i = 0; i < 9; i++) html += '<button type="button" class="gn-slot" data-slot="' + i + '" aria-label="Empty"></button>';
+      box.innerHTML = html + '</div><p class="gn-tally2" id="gn-score"></p><p id="gn-info">&nbsp;</p>';
+      var slots = $('gn-grid').children;
+      function score() { $('gn-score').innerHTML = '<b>You</b> ' + mine + ' · <b>' + rival.name + '</b> ' + theirs; }
+      function clear(k) {
+        if (items[k]) { window.clearTimeout(items[k].t); delete items[k]; }
+        slots[k].className = 'gn-slot';
+        slots[k].textContent = '';
+        slots[k].setAttribute('aria-label', 'Empty');
+      }
+      function spawn() {
+        var empty = [];
+        for (var j = 0; j < slots.length; j++) if (!items[j]) empty.push(j);
+        if (empty.length) {
+          var k = pickOne(empty), r = Math.random() * 102, rar = RARITY[0];
+          for (var n = 0; n < RARITY.length; n++) { r -= RARITY[n].w; if (r < 0) { rar = RARITY[n]; break; } }
+          items[k] = { rar: rar, t: window.setTimeout(function () { clear(k); }, 1700) };
+          claim(k, items[k]);
+          slots[k].className = 'gn-slot on gn-r-' + rar.k;
+          slots[k].textContent = rar.v;
+          slots[k].setAttribute('aria-label', rar.n + ', worth ' + rar.v);
+        }
+        spawnT = window.setTimeout(spawn, 170 + Math.random() * 130);
+      }
+      // the rival goes for anything good the moment it lands: always the legendaries, rarely the whites
+      var CHANCE = { white: 0.3, green: 0.55, blue: 0.8, purple: 1, orange: 1 }, rivalTs = [];
+      function claim(k, it) {
+        if (Math.random() > CHANCE[it.rar.k] * (asTom() ? 0.8 : 1)) return;
+        var wait = rival.delay * (0.7 + Math.random() * 0.6) * (it.rar.k === 'orange' ? 0.8 : 1);
+        rivalTs.push(window.setTimeout(function () {
+          if (items[k] !== it) return;
+          theirs += it.rar.v;
+          clear(k);
+          slots[k].classList.add('taken');
+          window.setTimeout(function () { slots[k].classList.remove('taken'); }, 250);
+          if (it.rar.k === 'orange') $('gn-info').textContent = asTom() ? 'Don: oh nice' : "Tom: I'll hold onto that for you";
+          score();
+        }, wait));
+      }
+      $('gn-grid').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('.gn-slot') : null;
+        if (!b) return;
+        var k = +b.getAttribute('data-slot'), it = items[k];
+        if (!it) return;
+        mine += it.rar.v;
+        if (it.rar.k === 'orange') { myOrange++; $('gn-info').textContent = 'Legendary! Yours.'; }
+        clear(k);
+        score();
+      });
+      score();
+      spawn();
+      var stop = countdown(MS, function () {
+        var win = mine > theirs, great = win && myOrange >= 2;
+        var note = asTom()
+          ? (win ? 'You ' + mine + ', Don ' + theirs + ". Don says he's easy about it." : 'Don ' + theirs + ', you ' + mine + ". Don's quicker than he looks.")
+          : (win ? 'You ' + mine + ', Tom ' + theirs + (great ? '. Two legendaries! Tom offers to hold onto them for you.' : '. Tom says well done, and means it.') : 'Tom ' + theirs + ', you ' + mine + ". He'll hold onto it all for you.");
+        done(win, note, great);
+      });
+      return function () {
+        stop();
+        window.clearTimeout(spawnT);
+        rivalTs.forEach(function (t) { window.clearTimeout(t); });
+        Object.keys(items).forEach(function (k) { window.clearTimeout(items[k].t); });
+      };
+    }
+  };
+
+  // ----- Timber: cut the notch, then drop it on the lawn -----
+  MINI.timber = {
+    title: function () { return 'TIMBER!'; },
+    rules: function () {
+      return '<p>Two steps. First, CHOP 15 times to cut the notch before the timer runs out. The faster you chop, the steadier the tree.</p>' +
+        '<p>Then the tree starts to sway. Hit TIMBER while it leans over the <b>lawn</b>. Not the shed. Not next door.</p>';
+    },
+    play: function (box, done) {
+      var TAPS = 15, taps = 0, stopSway = null, stopTimer, t0 = now();
+      box.innerHTML = '<h2>TIMBER!</h2>' + TIMER +
+        '<div class="gn-yard"><span class="gn-tree" id="gn-tree">🌳</span></div>' +
+        '<div class="gn-bar gn-wide"><i id="gn-prog" style="width:0"></i></div>' +
+        '<p id="gn-info">Notch: 0 / ' + TAPS + '</p><button type="button" class="gn-btn gn-big" id="gn-act">CHOP</button>';
+      var btn = $('gn-act'), tree = $('gn-tree');
+      btn.focus();
+      function fell() {
+        stopTimer();
+        var left = timeLeft(t0, 6000) / 6000, speed = 0.45 + (1 - left) * 0.9, phase = 0, pos = 0.5;
+        box.innerHTML = '<h2>TIMBER!</h2>' + TIMER +
+          '<div class="gn-yard"><span class="gn-tree" id="gn-tree">🌳</span></div>' +
+          '<div class="gn-strip"><span class="shed">SHED</span><span class="lawn">LAWN</span><span class="fence">NEXT DOOR</span><i id="gn-mark"></i></div>' +
+          "<p id=\"gn-info\">It's going… wait for the lawn.</p><button type=\"button\" class=\"gn-btn gn-big\" id=\"gn-act\">TIMBER!</button>";
+        var mark = $('gn-mark'), t2 = $('gn-tree'), b2 = $('gn-act');
+        b2.focus();
+        stopSway = frames(function (dt) {
+          phase += dt * speed * Math.PI;
+          pos = 0.5 + 0.5 * Math.sin(phase);
+          mark.style.left = pos * 100 + '%';
+          t2.style.transform = 'rotate(' + ((pos - 0.5) * 70) + 'deg)';
+        });
+        b2.addEventListener('click', function () {
+          if (pos < 0.35) done(false, 'It did not miss the shed.');
+          else if (pos > 0.62) done(false, 'Next door would like a word.');
+          else {
+            var great = Math.abs(pos - 0.485) < 0.05;
+            done(true, great ? 'Dead centre of the lawn. Somewhere, a council officer weeps.' : 'Down on the lawn. It missed the shed!', great);
+          }
+        });
+        stopTimer = countdown(6000, function () { done(false, 'You waited too long. It fell by itself, onto the shed.'); });
+      }
+      btn.addEventListener('click', function () {
+        taps++;
+        $('gn-prog').style.width = Math.min(100, taps / TAPS * 100) + '%';
+        $('gn-info').textContent = 'Notch: ' + taps + ' / ' + TAPS;
+        tree.style.transform = 'rotate(' + (taps % 2 ? 3 : -3) + 'deg)';
+        btn.classList.remove('hit');
+        void btn.offsetWidth;
+        btn.classList.add('hit');
+        if (taps === TAPS) fell();
+      });
+      stopTimer = countdown(6000, function () { done(false, taps + ' / ' + TAPS + ' chops. The tree stands. It looks smug.'); });
+      return function () { stopTimer(); if (stopSway) stopSway(); };
+    }
+  };
+
+  // ----- Breathe: bring the hype down before Tom does a speech -----
+  var HYPE_LINES = ["I've made a SECOND banner", 'Should I do a speech?', 'What if we all wore matching headsets', "I've ordered a smoke machine", 'Is it 7:30 yet?', 'I AM SO CALM', "I've written us a theme tune"];
+  MINI.breathe = {
+    title: function () { return asTom() ? 'BREATHE, TOM' : 'BREATHE WITH TOM'; },
+    rules: function () {
+      return '<p>' + (asTom() ? "You're" : "Tom's") + ' getting more excited by the second. Watch the HYPE meter.</p>' +
+        '<p>Hold the button to breathe in, and let go while the circle is inside the gold ring. The ring moves every breath.</p>' +
+        '<p>Three good breaths and ' + (asTom() ? "you're" : "he's") + ' calm. If HYPE fills up, ' + (asTom() ? "you're" : "he's") + ' off.</p>';
+    },
+    play: function (box, done) {
+      var GROW = 2200, MAX = 1.1, good = 0, bad = 0, holding = false, held0 = 0, size = 0, hype = 30, lo, hi, nextLine = 2.5, over = false;
+      box.innerHTML = '<h2>' + this.title() + '</h2>' +
+        '<p class="gn-meter2">HYPE <span class="gn-bar gn-hype"><i id="gn-hype"></i></span></p>' +
+        '<p class="gn-hypeline" id="gn-line">&nbsp;</p>' +
+        '<div class="gn-lung gn-lung2" id="gn-lung"><b id="gn-ring"></b><i id="gn-breath"></i></div>' +
+        '<p id="gn-info">Good 0 / 3 · Bad ' + bad + '</p>' +
+        '<button type="button" class="gn-btn gn-big gn-hold" id="gn-act">HOLD</button>';
+      var btn = $('gn-act'), circle = $('gn-breath'), ring = $('gn-ring'), lung = $('gn-lung');
+      function newRing() {
+        lo = 0.32 + Math.random() * 0.42;
+        hi = lo + 0.2 - good * 0.03;
+        var px = lung.offsetWidth || 130;
+        ring.style.width = ring.style.height = hi * 100 + '%';
+        ring.style.borderWidth = Math.max(4, (hi - lo) * px / 2) + 'px';
+      }
+      function draw() {
+        circle.style.transform = 'translate(-50%, -50%) scale(' + size + ')';
+        circle.className = holding ? (size >= lo && size <= hi ? 'grow in' : 'grow') : '';
+        $('gn-hype').style.width = Math.min(100, hype) + '%';
+      }
+      function finish(win, note, great) { if (over) return; over = true; done(win, note, great); }
+      newRing();
+      var stopFrames = frames(function (dt) {
+        hype += dt * 9;
+        nextLine -= dt;
+        if (nextLine <= 0) {
+          nextLine = 2.2 + Math.random() * 1.2;
+          hype += 6;
+          $('gn-line').textContent = (asTom() ? 'You: ' : 'Tom: ') + pickOne(HYPE_LINES);
+        }
+        if (holding) {
+          size = Math.min(MAX, (now() - held0) / GROW);
+          if (size >= MAX) release();
+        }
+        draw();
+        if (hype >= 100) finish(false, 'Too late. ' + (asTom() ? "You've" : "Tom's") + ' started the speech.');
+      });
+      function press() {
+        if (holding || over) return;
+        holding = true;
+        held0 = now();
+        btn.textContent = 'BREATHE IN…';
+      }
+      function release() {
+        if (!holding) return;
+        holding = false;
+        var ok = size >= lo && size <= hi;
+        if (ok) { good++; hype = Math.max(0, hype - 28); } else { bad++; hype += 12; }
+        $('gn-info').textContent = (ok ? 'Lovely. ' : size < lo ? 'Too shallow. ' : 'Too much. ') + 'Good ' + good + ' / 3 · Bad ' + bad;
+        btn.textContent = 'HOLD';
+        size = 0;
+        if (good >= 3) { finish(true, asTom() ? 'Three slow breaths. You are, briefly, at peace.' : 'Three slow breaths. Tom is, briefly, at peace.', bad === 0); return; }
+        newRing();
+        draw();
+      }
+      btn.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+        press();
+      });
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointercancel', release);
+      btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      btn.addEventListener('keydown', function (e) {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        if (!e.repeat) press();
+      });
+      btn.addEventListener('keyup', function (e) {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        release();
+      });
+      btn.focus();
       draw();
-      if (size >= MAX) { release(); return; }
-      raf = window.requestAnimationFrame(tick);
+      return function () { stopFrames(); };
     }
-    function press() {
-      if (holding) return;
-      holding = true;
-      t0 = now();
-      btn.textContent = 'BREATHE IN…';
-      raf = window.requestAnimationFrame(tick);
-    }
-    function release() {
-      if (!holding) return;
-      holding = false;
-      window.cancelAnimationFrame(raf);
-      var ok = size >= LO && size <= HI;
-      if (ok) good++; else bad++;
-      $('gn-info').textContent = (ok ? 'Lovely. ' : size < LO ? 'Too shallow. ' : g.player === 'tom' ? 'Too much. Now you\'re dizzy. ' : 'Too much. Tom is now dizzy. ') + 'Good ' + good + ' · Bad ' + bad;
-      btn.textContent = 'HOLD';
-      size = 0;
+  };
+
+  // ----- Where's Tom: hot and cold on a Big Walk -----
+  MINI.shout = {
+    title: function () { return asTom() ? 'FIND DON' : "WHERE'S TOM?"; },
+    rules: function () {
+      return asTom()
+        ? "<p>The shortcut didn't work and you've lost Don. Walk with the arrows. After every step Don shouts back, and the louder he is, the closer you are.</p><p>You've only got a few steps to spare.</p>"
+        : "<p>Tom took a shortcut, and now he's somewhere out on the hills. Walk with the arrows. After every step he shouts back, and the louder he is, the closer you are.</p><p>You've only got a few steps to spare.</p>";
+    },
+    play: function (box, done) {
+      var N = 6, me = { x: 0, y: 5 }, target, steps = 0, lastD, seen = {}, keyH;
+      do { target = { x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N) }; }
+      while (Math.abs(target.x - me.x) + Math.abs(target.y - me.y) < 4 || Math.abs(target.x - me.x) + Math.abs(target.y - me.y) > 7);
+      var best = Math.abs(target.x - me.x) + Math.abs(target.y - me.y), STEPS = best + 3;
+      var html = '<h2>' + this.title() + '</h2><div class="gn-map" id="gn-map">';
+      for (var i = 0; i < N * N; i++) html += '<i></i>';
+      box.innerHTML = html + '</div><p class="gn-shout" id="gn-shout">&nbsp;</p><p id="gn-info">Steps left: ' + STEPS + '</p>' +
+        '<div class="gn-pad"><button type="button" class="gn-btn" data-move="0,-1" aria-label="North">↑</button>' +
+        '<button type="button" class="gn-btn" data-move="-1,0" aria-label="West">←</button>' +
+        '<button type="button" class="gn-btn" data-move="1,0" aria-label="East">→</button>' +
+        '<button type="button" class="gn-btn" data-move="0,1" aria-label="South">↓</button></div>';
+      var cells = $('gn-map').children, who = asTom() ? 'Don' : 'Tom';
+      function dist() { return Math.abs(target.x - me.x) + Math.abs(target.y - me.y); }
+      function draw() {
+        for (var j = 0; j < cells.length; j++) cells[j].className = seen[j] ? 'seen' : '';
+        cells[me.y * N + me.x].className = 'me';
+      }
+      function shout(d) {
+        var lines = asTom()
+          ? ['', 'oh hi', 'over here!', 'over here', '(faint) …over here', '(very faint) …tom?', '(silence)']
+          : ['', 'Oh hi! Found a really good bit', 'OVER HERE!', 'Over here!', '(faint) …over here…', '(very faint) …found a good bit…', '(silence)'];
+        var trend = lastD === undefined ? '' : d < lastD ? '  (louder)' : d > lastD ? '  (quieter)' : '  (same)';
+        $('gn-shout').textContent = who + ': ' + lines[Math.min(6, d)] + trend;
+      }
+      function move(dx, dy) {
+        var nx = me.x + dx, ny = me.y + dy;
+        if (nx < 0 || ny < 0 || nx >= N || ny >= N) return;
+        seen[me.y * N + me.x] = 1;
+        me = { x: nx, y: ny };
+        steps++;
+        var d = dist();
+        draw();
+        shout(d);
+        lastD = d;
+        $('gn-info').textContent = 'Steps left: ' + (STEPS - steps);
+        if (d === 0) {
+          cells[me.y * N + me.x].className = 'found';
+          done(true, asTom() ? "Found Don. He's been sitting on a rock the whole time." : "Found him. He's found a really good bit.", steps <= best + 1);
+        } else if (steps >= STEPS) {
+          done(false, asTom() ? 'Still lost. Don sends you a pin. It is of a very different hill.' : "No sign of him. Tom's last message: 'brb'");
+        }
+      }
+      box.querySelector('.gn-pad').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('[data-move]') : null;
+        if (!b) return;
+        var m = b.getAttribute('data-move').split(',');
+        move(+m[0], +m[1]);
+      });
+      keyH = function (e) {
+        var k = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+        if (k) { e.preventDefault(); move(k[0], k[1]); }
+      };
+      document.addEventListener('keydown', keyH);
       draw();
-      var tom = g.player === 'tom';
-      if (good >= 2) done(true, tom ? 'Two slow breaths. You are, briefly, at peace.' : 'Two slow breaths. Tom is, briefly, at peace.');
-      else if (bad >= 2) done(false, tom ? 'You hyperventilate with joy.' : 'Tom hyperventilates with joy.');
+      shout(dist());
+      lastD = dist();
+      box.querySelector('[data-move]').focus();
+      return function () { document.removeEventListener('keydown', keyH); };
     }
-    btn.addEventListener('pointerdown', function (e) {
-      e.preventDefault();
-      if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
-      press();
-    });
-    btn.addEventListener('pointerup', release);
-    btn.addEventListener('pointercancel', release);
-    btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-    btn.addEventListener('keydown', function (e) {
-      if (e.key !== ' ' && e.key !== 'Enter') return;
-      e.preventDefault();
-      if (!e.repeat) press();
-    });
-    btn.addEventListener('keyup', function (e) {
-      if (e.key !== ' ' && e.key !== 'Enter') return;
-      e.preventDefault();
-      release();
-    });
-    btn.focus();
-    draw();
-    return function () { window.cancelAnimationFrame(raf); };
+  };
+
+  // ----- Outbid: buy your own headset back off eBay -----
+  MINI.auction = {
+    title: function () { return 'OUTBID'; },
+    rules: function () {
+      return "<p>Your old headset is up on eBay, and you'd quite like it back.</p>" +
+        "<p>Bid with the buttons. Your budget is £40. There's one other bidder, 'a buyer near you', and they love a last-second bid.</p>" +
+        '<p>Be the top bidder when the timer hits zero.</p>';
+    },
+    play: function (box, done) {
+      var MS = 15000, t0 = now(), price = 18, leading = false, rivalMax = 30 + Math.floor(Math.random() * 9), rivalT, sniped = false, log = [];
+      box.innerHTML = '<h2>OUTBID</h2>' + TIMER +
+        "<p class=\"gn-lot\">'Gaming headset, lightly used, a bit of wear on the left ear'</p>" +
+        '<p class="gn-price" id="gn-price">£18</p><p id="gn-lead">No bids yet</p>' +
+        '<div class="gn-pad2"><button type="button" class="gn-btn" id="gn-b1">BID +£1</button><button type="button" class="gn-btn" id="gn-b5">BID +£5</button></div>' +
+        '<ul class="gn-log" id="gn-log"></ul>';
+      function draw() {
+        $('gn-price').textContent = '£' + price;
+        $('gn-lead').textContent = leading ? "You're the top bidder" : log.length ? "Top bidder: 'a buyer near you'" : 'No bids yet';
+        $('gn-lead').className = leading ? 'good' : '';
+        $('gn-log').innerHTML = log.slice(-3).reverse().map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('');
+        $('gn-b1').disabled = price + 1 > 40;
+        $('gn-b5').disabled = price + 5 > 40;
+      }
+      function rivalBid() {
+        rivalT = 0;
+        if (!leading || price >= rivalMax || timeLeft(t0, MS) < 350) return;
+        price = Math.min(rivalMax, price + 1 + Math.floor(Math.random() * 3));
+        leading = false;
+        log.push("a buyer near you bid £" + price);
+        draw();
+      }
+      function bid(inc) {
+        if (price + inc > 40) return;
+        price += inc;
+        leading = true;
+        log.push('you bid £' + price);
+        draw();
+        window.clearTimeout(rivalT);
+        // early on they only sometimes answer; near the end they always do
+        var left = timeLeft(t0, MS);
+        if (left > 4000 && Math.random() < 0.5) { rivalT = 0; return; }
+        rivalT = window.setTimeout(rivalBid, left > 4000 ? 700 + Math.random() * 900 : 250 + Math.random() * 300);
+      }
+      $('gn-b1').addEventListener('click', function () { bid(1); });
+      $('gn-b5').addEventListener('click', function () { bid(5); });
+      // the snipe: if you're winning a second from the end, they bid
+      var snipeT = window.setTimeout(function () { sniped = true; if (leading) rivalBid(); }, MS - 1000);
+      draw();
+      $('gn-b1').focus();
+      var stop = countdown(MS, function () {
+        if (leading) done(true, price <= 30 ? 'Yours for £' + price + '. The seller leaves you lovely feedback.' : 'Yours for £' + price + '. Postage is £4.99. The seller is very quick.', price <= 30);
+        else done(false, log.length ? "Sold to 'a buyer near you' for £" + price + '.' : 'No bids. It sells to someone else for £18.');
+      });
+      return function () { stop(); window.clearTimeout(rivalT); window.clearTimeout(snipeT); };
+    }
+  };
+
+  // ----- Keep the lights on: juggle the factory while Tom plugs things in -----
+  var SPIKES = ['a Space Elevator', 'his own factory', 'the Christmas lights', 'a Particle Accelerator', 'a second Space Elevator', 'something he found'];
+  MINI.power = {
+    title: function () { return 'KEEP THE LIGHTS ON'; },
+    rules: function () {
+      return '<p>Your factory runs on 100 MW, and ' + palName() + ' keeps plugging things in.</p>' +
+        '<p>Tap machines to switch them on and off. Running machines make parts. Go over 100 MW for more than a moment and the fuse blows.</p>' +
+        '<p>Make 300 parts in 20 seconds. Two blown fuses and the night is over.</p>';
+    },
+    play: function (box, done) {
+      var MS = 20000, CAP = 100, parts = 0, fuses = 0, over = 0, spike = 0, spikeLeft = 0, nextSpike = 2.5, dark = 0, ended = false;
+      var M = [{ n: 'Smelter', mw: 20, on: true }, { n: 'Constructor', mw: 15, on: true }, { n: 'Assembler', mw: 30, on: true }, { n: 'Foundry', mw: 35, on: false }, { n: 'Refinery', mw: 40, on: false }];
+      var html = '<h2>KEEP THE LIGHTS ON</h2>' + TIMER +
+        '<p class="gn-meter2">POWER <span class="gn-bar gn-power"><i id="gn-load"></i></span> <span id="gn-mw"></span></p>' +
+        '<p class="gn-hypeline" id="gn-line">&nbsp;</p><div class="gn-machines" id="gn-machines">';
+      M.forEach(function (m, i) { html += '<button type="button" class="gn-btn gn-mach" data-m="' + i + '">' + m.n + '<small>' + m.mw + ' MW</small></button>'; });
+      box.innerHTML = html + '</div><p id="gn-info">Parts 0 / 300 · Fuses 0 / 2</p>';
+      var btns = $('gn-machines').children;
+      function usage() { return M.reduce(function (a, m) { return a + (m.on ? m.mw : 0); }, 0) + spike; }
+      function draw() {
+        var u = usage();
+        M.forEach(function (m, i) { btns[i].classList.toggle('on', m.on); btns[i].setAttribute('aria-pressed', m.on ? 'true' : 'false'); });
+        $('gn-load').style.width = Math.min(100, u / CAP * 100) + '%';
+        $('gn-load').className = u > CAP ? 'hot' : '';
+        $('gn-mw').textContent = u + ' / ' + CAP + ' MW';
+        $('gn-info').textContent = 'Parts ' + Math.floor(parts) + ' / 300 · Fuses ' + fuses + ' / 2';
+      }
+      function finish(win, note, great) { if (ended) return; ended = true; done(win, note, great); }
+      $('gn-machines').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('[data-m]') : null;
+        if (!b || dark > 0) return;
+        var m = M[+b.getAttribute('data-m')];
+        m.on = !m.on;
+        draw();
+      });
+      var stopFrames = frames(function (dt) {
+        if (dark > 0) { dark -= dt; if (dark <= 0) $('gn-line').textContent = 'Power restored.'; return; }
+        nextSpike -= dt;
+        if (spikeLeft > 0) { spikeLeft -= dt; if (spikeLeft <= 0) { spike = 0; $('gn-line').textContent = palName() + ' unplugged it.'; } }
+        else if (nextSpike <= 0) {
+          spike = 25 + Math.floor(Math.random() * 25);
+          spikeLeft = 2.5 + Math.random();
+          nextSpike = spikeLeft + 1.5 + Math.random() * 2;
+          $('gn-line').textContent = palName() + ' plugged in ' + pickOne(SPIKES) + ' (+' + spike + ' MW)';
+        }
+        var u = usage();
+        if (u > CAP) {
+          over += dt;
+          if (over > 0.7) {
+            fuses++;
+            over = 0;
+            spike = 0;
+            spikeLeft = 0;
+            M.forEach(function (m) { m.on = false; });
+            dark = 1.5;
+            $('gn-line').textContent = 'POWER FAILURE: fuse blown';
+            if (fuses >= 2) { draw(); finish(false, 'The fuse blew twice. ' + palName() + ': ' + (asTom() ? "'sorry. plugged something in'" : "'Sorry! Plugged something in'")); return; }
+          }
+        } else {
+          over = 0;
+          parts += M.reduce(function (a, m) { return a + (m.on ? m.mw : 0); }, 0) / 3.6 * dt;
+        }
+        draw();
+        if (parts >= 300) finish(true, fuses ? '300 parts. The lights only went out once.' : 'Not a single flicker. ' + palName() + ' unplugs his Space Elevator, impressed.', fuses === 0);
+      });
+      draw();
+      btns[0].focus();
+      var stop = countdown(MS, function () { finish(false, 'Only ' + Math.floor(parts) + ' parts. The factory sulks.'); });
+      return function () { stop(); stopFrames(); };
+    }
   };
 
   function copyResult(btn) {
