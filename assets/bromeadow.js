@@ -13,6 +13,8 @@
   var OFFLINE_CAP_S = 8 * 3600;
   var OFFLINE_RATE = 0.5;
   var ACH_BONUS = 0.02; // +2% production per achievement
+  var MUTAGEN_MULT = 4;   // each mutagen upgrade multiplies mutation speed
+  var DRIP_RATE = 2;      // mutation points per second from the drip, before mutagens
 
   // ---------- numbers ----------
 
@@ -106,6 +108,15 @@
   });
   UPGRADES.push({ id: 'shiny-0', icon: '🌟', name: 'Polished Forehead', cost: 7.7e5, desc: 'Shiny Bromeadows appear twice as often.', unlocked: function (s) { return s.shinies >= 3; }, kind: 'shiny' });
   UPGRADES.push({ id: 'shiny-1', icon: '🌟', name: 'Lingering Glance', cost: 7.7e7, desc: 'Shiny Bromeadows stay twice as long.', unlocked: function (s) { return s.shinies >= 7; }, kind: 'shinylong' });
+  // Mutagens: cheap ways to rush through the mutations so everyone gets to
+  // see the whole thing without poking thousands of times.
+  [[10, 'Suspicious Serum', 0], [40, 'Bubbling Tonic', 1], [150, 'Radioactive Thread', 3], [500, 'Essence of Smirk', 5]].forEach(function (c, i) {
+    UPGRADES.push({
+      id: 'mutagen-' + i, icon: '🧪', name: c[1], cost: c[0], desc: 'Mutation goes ' + MUTAGEN_MULT + '× faster.',
+      unlocked: function (s) { return i === 0 ? s.clicks >= 5 : mutStage(s.mut) >= c[2]; }, kind: 'mutagen'
+    });
+  });
+  UPGRADES.push({ id: 'mut-drip', icon: '💉', name: 'Mutagen Drip', cost: 25, desc: 'He keeps mutating on his own, even when you stop poking.', unlocked: function (s) { return mutStage(s.mut) >= 1; }, kind: 'mutdrip' });
   var UBY = {};
   UPGRADES.forEach(function (u) { UBY[u.id] = u; });
 
@@ -129,9 +140,9 @@
     ['Engine Of Smug', 'Reach 1 million Broms per second.', function (s) { return cps() >= 1e6; }],
     ['Upgraded', 'Buy 10 upgrades.', function (s) { return s.upgrades.length >= 10; }],
     ['Fully Bespoke', 'Buy 40 upgrades.', function (s) { return s.upgrades.length >= 40; }],
-    ['It\'s Spreading', 'Make Mr Bromeadow copy himself.', function (s) { return mutStage(s.clicks) >= 2; }],
-    ['Do Not Look Directly At Him', 'Open the third eye.', function (s) { return mutStage(s.clicks) >= 6; }],
-    ['What Have You Done', 'Reach Eldritch Bromeadow.', function (s) { return mutStage(s.clicks) >= 9; }],
+    ['It\'s Spreading', 'Make Mr Bromeadow copy himself.', function (s) { return mutStage(s.mut) >= 2; }],
+    ['Do Not Look Directly At Him', 'Open the third eye.', function (s) { return mutStage(s.mut) >= 6; }],
+    ['What Have You Done', 'Reach Eldritch Bromeadow.', function (s) { return mutStage(s.mut) >= 9; }],
     ['The Iron Finger', 'Hold on. Just... hold on.', function (s) { return s.secret >= 1; }, true]
   ];
 
@@ -185,6 +196,7 @@
     [9, 'IT IS TOO LATE TO STOP POKING.'],
     [9, 'The faces are humming. It sounds a bit like a sewing machine.']
   ];
+  // mutation is driven by "mutation points" (S.mut), not raw pokes
   function mutStage(clicks) {
     var st = 0;
     for (var i = 0; i < MUTATIONS.length; i++) if (clicks >= MUTATIONS[i][0]) st = i;
@@ -200,7 +212,7 @@
   // ---------- state ----------
 
   function fresh() {
-    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true, mutate: true, mstage: 0, secret: 0 };
+    return { broms: 0, total: 0, clicks: 0, clickEarned: 0, shinies: 0, owned: {}, upgrades: [], ach: [], started: Date.now(), last: Date.now(), sound: true, mutate: true, mstage: 0, secret: 0, mut: 0 };
   }
   var S = fresh();
   try {
@@ -208,6 +220,7 @@
     if (raw) {
       var loaded = JSON.parse(raw);
       for (var k in loaded) if (Object.prototype.hasOwnProperty.call(S, k)) S[k] = loaded[k];
+      if (typeof loaded.mut !== 'number') S.mut = S.clicks || 0; // saves from before mutation points
     }
   } catch (e) { /* no storage: play without saving */ }
   function save() {
@@ -224,7 +237,8 @@
     return m;
   }
   function prodMult(id) { var n = 0; S.upgrades.forEach(function (u) { if (UBY[u] && UBY[u].kind === 'prod' && UBY[u].target === id) n++; }); return Math.pow(2, n); }
-  function globalMult() { return Math.pow(1.25, count('global')) * (1 + ACH_BONUS * S.ach.length) * (1 + MUT_BONUS * mutStage(S.clicks)); }
+  function globalMult() { return Math.pow(1.25, count('global')) * (1 + ACH_BONUS * S.ach.length) * (1 + MUT_BONUS * mutStage(S.mut)); }
+  function mutSpeed() { return Math.pow(MUTAGEN_MULT, count('mutagen')); }
   function producerCps(p) { return (S.owned[p.id] || 0) * p.cps * prodMult(p.id) * globalMult(); }
   function baseCps() { var t = 0; PRODUCERS.forEach(function (p) { t += producerCps(p); }); return t; }
   function cps() { return baseCps() * buffMult('cps'); }
@@ -407,7 +421,12 @@
     earn(v);
     S.clicks += n;
     S.clickEarned += v;
-    var st = mutStage(S.clicks);
+    S.mut += n * mutSpeed();
+    checkMutation();
+    return v;
+  }
+  function checkMutation() {
+    var st = mutStage(S.mut);
     if (st > S.mstage) {
       S.mstage = st;
       var m = MUTATIONS[st];
@@ -417,7 +436,6 @@
       var mb = root.querySelector('.mb');
       mb.classList.remove('shake'); void mb.offsetWidth; mb.classList.add('shake');
     }
-    return v;
   }
   function poke(x, y) {
     var v = addPokes(1);
@@ -549,7 +567,7 @@
     var opts = [];
     NEWS.forEach(function (n, i) { if (S.total >= n[0]) opts.push(i); });
     var cnt = PRODUCERS.filter(function (p) { return S.owned[p.id]; });
-    var pick, st = mutStage(S.clicks);
+    var pick, st = mutStage(S.mut);
     if (st >= 1 && S.mutate && Math.random() < 0.35) {
       var mn = MUT_NEWS.filter(function (n) { return n[0] <= st; });
       elTicker.textContent = mn[Math.floor(Math.random() * mn.length)][1];
@@ -589,7 +607,8 @@
       ['Upgrades bought', S.upgrades.length + ' / ' + UPGRADES.length],
       ['Shiny Bromeadows caught', S.shinies],
       ['Achievement bonus', '+' + Math.round(ACH_BONUS * S.ach.length * 100) + '% production'],
-      ['Mutation', MUTATIONS[mutStage(S.clicks)][1] + ' (+' + Math.round(MUT_BONUS * mutStage(S.clicks) * 100) + '% production)'],
+      ['Mutation', MUTATIONS[mutStage(S.mut)][1] + ' (+' + Math.round(MUT_BONUS * mutStage(S.mut) * 100) + '% production)'],
+      ['Mutation speed', mutSpeed() + '×' + (has('mut-drip') ? ' + drip' : '')],
       ['Playing for', fmtTime(played)]
     ].map(function (r) { return '<div class="mb-stat"><span>' + r[0] + '</span><b>' + esc(r[1]) + '</b></div>'; }).join('');
     $('.mb-achcount').textContent = S.ach.length + ' / ' + ACHIEVEMENTS.length;
@@ -642,17 +661,17 @@
     clones.push(c);
   }
   function renderMutation() {
-    var L = S.mutate ? mutLevel(S.clicks) : 0;
-    var st = mutStage(S.clicks);
+    var L = S.mutate ? mutLevel(S.mut) : 0;
+    var st = mutStage(S.mut), speed = mutSpeed();
     var next = MUTATIONS[st + 1];
     elName.textContent = st ? 'Mr Bromeadow · ' + MUTATIONS[st][1] : 'Mr Bromeadow';
-    elMutBar.style.width = (next ? (S.clicks - MUTATIONS[st][0]) / (next[0] - MUTATIONS[st][0]) * 100 : 100) + '%';
-    elMutLabel.textContent = next ? 'Mutation ' + st + '/' + (MUTATIONS.length - 1) + ' · ' + (next[0] - S.clicks) + ' pokes to the next' : 'Fully mutated. There is no going back.';
+    elMutBar.style.width = (next ? (S.mut - MUTATIONS[st][0]) / (next[0] - MUTATIONS[st][0]) * 100 : 100) + '%';
+    elMutLabel.textContent = next ? 'Mutation ' + st + '/' + (MUTATIONS.length - 1) + ' · ' + Math.ceil((next[0] - S.mut) / speed) + ' pokes to the next' + (speed > 1 ? ' · 🧪 ' + speed + '×' : '') : 'Fully mutated. There is no going back.';
     if (Math.abs(L - shownLevel) < 0.004) return;
     shownLevel = L;
 
     // 1. he grows a little with every poke
-    var grow = 1 + 0.3 * Math.pow(Math.min(S.mutate ? S.clicks : 0, 2500) / 2500, 0.6);
+    var grow = 1 + 0.3 * Math.pow(Math.min(S.mutate ? S.mut : 0, 2500) / 2500, 0.6);
     elWrap.style.setProperty('--grow', grow.toFixed(4));
     // 2. clones
     var want = L < 2 ? 0 : Math.min(28, Math.floor((L - 2) * 3.5) + 1);
@@ -722,9 +741,11 @@
     if (Date.now() - S.last > 60000) offline();
     S.last = Date.now();
     earn(cps() * dt);
+    if (has('mut-drip')) S.mut += DRIP_RATE * mutSpeed() * dt;
     sinceSlow += dt;
     if (sinceSlow >= 0.25) {
       sinceSlow = 0;
+      checkMutation();
       update();
       refreshUpgrades();
       checkAchievements();
@@ -756,7 +777,7 @@
     }
   }
 
-  S.mstage = Math.max(S.mstage || 0, mutStage(S.clicks));
+  S.mstage = Math.max(S.mstage || 0, mutStage(S.mut));
   offline();
   refreshUpgrades();
   update();
