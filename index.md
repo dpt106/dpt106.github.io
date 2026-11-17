@@ -26,6 +26,10 @@ title: Dan
     <span class="home-link-title">Chaddle</span>
     <span class="home-link-desc">Ten grenades. Too many pegs. One thumbs up.</span>
   </a>
+  <a class="home-link" href="/chadwood/">
+    <span class="home-link-title">Chadwood</span>
+    <span class="home-link-desc">One skill. Ninety-nine levels. Tim chops trees.</span>
+  </a>
   <a class="home-link" href="/about/">
     <span class="home-link-title">About</span>
     <span class="home-link-desc">A little about this site</span>
