@@ -39,6 +39,9 @@
     { name: 'The Chadsaw', power: 2.2, req: 65, price: 24000, head: '#ff8a1e', note: 'Technically not an axe. Nobody is checking.' }
   ];
   var AUTO_PRICE = 1500;
+  var CHEAT = { xp: 5, coins: 5, chop: 2, walk: 1.5 };
+  function xpMult() { return S.cheat ? CHEAT.xp : 1; }
+  function coinMult() { return S.cheat ? CHEAT.coins : 1; }
 
   var SKILLS = [
     ['Fishing', 'Tim does not fish. Fish cannot be chopped.'],
@@ -70,6 +73,7 @@
   ];
   var ASK_LINES = ['lvl?', 'tim do u ever stop', 'wanna do a quest?', 'tim come to the pub', 'u chop here often?', 'tim r u ignoring me'];
   var BOT_AUTO_LINES = ['is tim a bot?', 'reported.', 'hes chopping in his sleep', 'that is 100% a bot', 'tim? TIM?'];
+  var BOT_CHEAT_LINES = ['cheater', 'reported.', 'he paid for that', 'thats not how xp works', 'tim why are u glowing', '5x xp?? in THIS economy', 'my mum says cheaters never prosper'];
   var GZ = ['gz', 'grats', 'gz tim', 'nice one', 'nerd', 'gz!!'];
   var TIM_REPLIES = ['Busy. Chopping.', 'No.', 'Can’t. Tree.', 'One more tree.', 'Woodcutting is the only quest.', 'Shh.', 'Later.'];
   var ANCIENT_LINES = ['Ow.', 'Easy, mate.', 'We have the same face.', 'Is this about the grenades?', 'I knew your dad.', 'Have you tried fishing?'];
@@ -84,7 +88,7 @@
   // ---------- save ----------
   var S = {
     xp: 0, coins: 0, axe: 0, inv: [], auto: false, autoOn: false,
-    logs: 0, felled: 0, nests: 0, stolen: 0, earned: 0, played: 0, got99: false
+    logs: 0, felled: 0, nests: 0, stolen: 0, earned: 0, played: 0, got99: false, cheat: false, cheated: false
   };
   var returning = false;
   try {
@@ -205,6 +209,7 @@
       '<span><span class="cw-k">Woodcutting</span><span class="cw-lvl"></span><span class="cw-bar" title=""><i></i></span></span>' +
       '<span><span class="cw-k">Coins</span><span class="cw-coins"></span></span>' +
       '<span class="cw-spacer"></span>' +
+      '<button class="cw-cheat" type="button" aria-pressed="false">CHEAT MODE</button>' +
       '<button class="cw-auto" type="button" aria-pressed="false" hidden>Autochop</button>' +
       '<button class="cw-mute" type="button"></button>' +
     '</div>' +
@@ -228,7 +233,7 @@
   var stage = $('.cw-stage'), board = $('.cw-board'), canvas = $('canvas'), ov = $('.cw-ov');
   var panel = $('.cw-panel'), chat = $('.cw-chat');
   var ctx = canvas.getContext('2d');
-  var el = { lvl: $('.cw-lvl'), bar: $('.cw-bar'), barFill: $('.cw-bar i'), coins: $('.cw-coins'), auto: $('.cw-auto'), mute: $('.cw-mute') };
+  var el = { lvl: $('.cw-lvl'), bar: $('.cw-bar'), barFill: $('.cw-bar i'), coins: $('.cw-coins'), auto: $('.cw-auto'), cheat: $('.cw-cheat'), mute: $('.cw-mute') };
 
   var faceImg = new Image(); faceImg.src = FACE_SRC;
   var portraitImg = new Image(); portraitImg.src = PORTRAIT_SRC;
@@ -411,6 +416,8 @@
     el.bar.title = L >= MAX ? fmt(S.xp) + ' xp. Maxed.' : fmt(S.xp) + ' / ' + fmt(b) + ' xp';
     el.coins.textContent = fmt(S.coins);
     el.auto.hidden = !S.auto;
+    el.cheat.setAttribute('aria-pressed', S.cheat ? 'true' : 'false');
+    el.cheat.textContent = S.cheat ? 'CHEATING \u00d75' : 'CHEAT MODE';
     el.auto.setAttribute('aria-pressed', S.autoOn ? 'true' : 'false');
     el.auto.textContent = S.autoOn ? 'Autochop: ON' : 'Autochop: off';
   }
@@ -441,7 +448,8 @@
         ['Axe', AXES[S.axe].name], ['Logs chopped', fmt(S.logs)], ['Trees felled', fmt(S.felled)],
         ['Bird’s nests', fmt(S.nests)], ['Logs lost to squirrels', fmt(S.stolen)],
         ['Coins earned', fmt(S.earned)], ['Time chopping', mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + 'm'],
-        ['Other hobbies', 'none']
+        ['Other hobbies', 'none'],
+        ['Cheated', S.cheated ? 'yes. we all saw.' : 'no (so far)']
       ];
       h += '<dl class="cw-stats">' + rows.map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>'; }).join('') + '</dl>' +
         '<p style="margin:10px 0 0;text-align:right"><button class="cw-small-btn" type="button" data-act="reset">Start over</button></p>';
@@ -474,6 +482,14 @@
           : 'Woodcutting ' + L + '. ' + fmt(xpFor(L + 1) - S.xp) + ' xp to level ' + (L + 1) + '.', 'good');
       } else say(SKILLS[k][0] + ': ' + SKILLS[k][1], 'sys');
     }
+  });
+  el.cheat.addEventListener('click', function () {
+    audio();
+    if (S.cheat) {
+      S.cheat = false;
+      say('Cheat mode off. The shame stays.', 'sys');
+      updateHud(); save();
+    } else showCheat();
   });
   el.auto.addEventListener('click', function () {
     S.autoOn = !S.autoOn;
@@ -557,14 +573,16 @@
     chips(t.c * TS + TS / 2 - tim.face * 8, t.r * TS + TS - 18, BARK[t.type]);
     var L = level();
     var p = Math.min(0.9, info.p * AXES[S.axe].power * (1 + (L - info.req) / 40));
+    if (S.cheat) p = Math.min(0.95, p * CHEAT.chop);
     if (Math.random() >= p) return;
 
     // got a log
     S.inv.push(t.type); S.logs++;
     sndLog();
-    floatText('+' + info.xp + ' xp', tim.x * TS + TS / 2, tim.y * TS - 34, '#bfff8a');
+    var gxp = info.xp * xpMult();
+    floatText('+' + gxp + ' xp', tim.x * TS + TS / 2, tim.y * TS - 34, '#bfff8a');
     if (!S.autoOn || Math.random() < 0.15) say('You get some ' + info.log.toLowerCase() + '.', 'good');
-    gainXP(info.xp);
+    gainXP(gxp);
 
     if (t.type === 5 && Math.random() < 0.18) {
       var line = pick(ANCIENT_LINES);
@@ -572,7 +590,7 @@
       say('<span class="tree">Ancient Chadwood:</span> ' + esc(line));
     }
     if (Math.random() < 1 / 70) {
-      var gold = Math.round((20 + Math.random() * 40) * (t.type + 1));
+      var gold = Math.round((20 + Math.random() * 40) * (t.type + 1) * coinMult());
       S.coins += gold; S.earned += gold; S.nests++;
       say('A bird’s nest falls out of the ' + info.name + '! There are ' + fmt(gold) + ' coins in it. Birds, eh.', 'good');
       floatText('+' + fmt(gold) + ' coins', t.c * TS + TS / 2, t.r * TS - 10, '#ffd34a');
@@ -621,6 +639,7 @@
     if (!S.inv.length) return 0;
     var total = 0;
     S.inv.forEach(function (t) { total += TREES[t].val; });
+    total *= coinMult();
     S.coins += total; S.earned += total; S.inv = [];
     sndCoins();
     floatText('+' + fmt(total) + ' coins', stall.c * TS + TS / 2, stall.r * TS - 10, '#ffd34a');
@@ -684,7 +703,7 @@
   var overlayOpen = false, saveT = 0;
   function update(dt) {
     if (!document.hidden) S.played += dt;
-    var moving = moveChar(tim, dt, SPEED);
+    var moving = moveChar(tim, dt, S.cheat ? SPEED * CHEAT.walk : SPEED);
     if (!moving && !tim.path.length && tim.goal) arrive();
     if (tim.chop) {
       tim.chopT += dt;
@@ -731,7 +750,8 @@
         b.talk = 14 + Math.random() * 22;
         if (overlayOpen) return;
         var r = Math.random();
-        if (S.autoOn && r < 0.35) speak(b, pick(BOT_AUTO_LINES));
+        if (S.cheat && r < 0.4) speak(b, pick(BOT_CHEAT_LINES));
+        else if (S.autoOn && r < 0.35) speak(b, pick(BOT_AUTO_LINES));
         else if (r < 0.3) {
           var pl = pick(PLACES);
           speak(b, pl[0]);
@@ -943,7 +963,14 @@
     ctx.restore();
     ctx.strokeStyle = '#2a1a10'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, hy, hr, 0, Math.PI * 2); ctx.stroke();
     if (S.autoOn) { ctx.fillStyle = 'rgba(160,255,160,0.85)'; ctx.font = 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.fillText('zzz', x + 16, hy - 12 + Math.sin(now * 3) * 2); }
-    if (tim.say) bubble(tim.say, x, hy - hr - 6);
+    if (S.cheat) {
+      ctx.globalAlpha = 0.55 + 0.45 * Math.sin(now * 8);
+      ctx.font = 'bold 10px system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText('CHEATER', x, hy - hr - 4);
+      ctx.fillStyle = '#ff3df0'; ctx.fillText('CHEATER', x, hy - hr - 4);
+      ctx.globalAlpha = 1;
+    }
+    if (tim.say) bubble(tim.say, x, hy - hr - (S.cheat ? 18 : 6));
   }
 
   function hitTest(wx, wy) {
@@ -1091,6 +1118,13 @@
       sndCoins(); updateHud(); save();
       say('You buy Autochop™. Tim will now chop, sell and upgrade on his own. This is definitely allowed.', 'good');
       closeOv();
+    } else if (act === 'cheat-yes') {
+      S.cheat = true; S.cheated = true;
+      sndLevel(); updateHud(); renderPanel(); save();
+      say('CHEAT MODE ON. 5\u00d7 xp, 5\u00d7 coins, faster chopping, faster legs. Tim knows.', 'bad');
+      burst(tim.x * TS + TS / 2, tim.y * TS - 20, 40, ['#ff3df0', '#ffffff', '#b04dff'], 160);
+      closeOv();
+      setTimeout(function () { speak(pick(bots), 'did tim just turn on cheats'); }, 1500);
     } else if (act === 'reset-yes') {
       wiping = true;
       try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* ignore */ }
@@ -1138,6 +1172,14 @@
     openOv(h);
   }
 
+  function showCheat() {
+    ov.setAttribute('data-kind', 'cheat');
+    openOv('<h2>Cheat mode?</h2>' +
+      '<p>5\u00d7 xp. 5\u00d7 coins. Twice the chopping. Faster legs. Woodcutting 99 in about five minutes.</p>' +
+      '<p class="dim">Free. No catch. Except everyone will know, forever. Including Tim.</p>' +
+      '<p><button class="cw-btn cheat" type="button" data-act="cheat-yes" data-focus>Cheat</button> <button class="cw-btn ghost" type="button" data-act="close">Play fair</button></p>');
+  }
+
   function showReset() {
     ov.setAttribute('data-kind', 'reset');
     openOv('<h2>Start over?</h2><p>Your level, coins and axes will be gone. The trees will not remember you.</p>' +
@@ -1149,10 +1191,13 @@
     sndFanfare();
     var mins = Math.floor(S.played / 60);
     openOv(
-      '<div class="cw-photo-wrap"><img class="cw-photo" alt="Tim, Woodcutting 99" src="' + PORTRAIT_SRC + '"></div>' +
+      '<div class="cw-photo-wrap"><img class="cw-photo" alt="Tim, Woodcutting 99" src="' + PORTRAIT_SRC + '">' +
+        (S.cheated ? '<span class="cw-stamp">CHEATED</span>' : '') + '</div>' +
       '<h2>Woodcutting 99</h2>' +
       '<p>Tim is now the finest woodcutter in all of Chadlinor. He has still not seen the rest of it.</p>' +
-      '<p>You are awarded the <span class="cw-cape">Cape of Chopping</span>. It is green. It smells of sap.</p>' +
+      (S.cheated
+        ? '<p>You are awarded the <span class="cw-cape">Cape of Chopping (Questionable)</span>. It is green. It smells of sap and lies.</p>'
+        : '<p>You are awarded the <span class="cw-cape">Cape of Chopping</span>. It is green. It smells of sap.</p>') +
       '<p class="dim">' + fmt(S.logs) + ' logs · ' + fmt(S.felled) + ' trees felled · ' + (mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' minutes') + ' · every other skill still level 1</p>' +
       '<button class="cw-btn" type="button" data-act="close" data-focus>Keep chopping anyway</button>'
     );
