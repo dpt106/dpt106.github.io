@@ -32,13 +32,13 @@
 
   var AXES = [
     { name: 'Butter knife', power: 0.45, req: 1, price: 0, head: '#d9dde2', note: 'It came with the house.' },
-    { name: 'Rusty hatchet', power: 0.75, req: 1, price: 40, head: '#a5643a', note: 'Tetanus included.' },
-    { name: 'Decent axe', power: 1.0, req: 10, price: 350, head: '#9aa4ad', note: 'An axe. Finally.' },
-    { name: 'Lumberjack axe', power: 1.3, req: 22, price: 2000, head: '#c23b32', note: 'Comes with a free flannel shirt (not included).' },
-    { name: 'Double-bit axe', power: 1.65, req: 40, price: 9000, head: '#59c2c9', note: 'Twice the bits.' },
-    { name: 'The Chadsaw', power: 2.2, req: 65, price: 40000, head: '#ff8a1e', note: 'Technically not an axe. Nobody is checking.' }
+    { name: 'Rusty hatchet', power: 0.75, req: 1, price: 25, head: '#a5643a', note: 'Tetanus included.' },
+    { name: 'Decent axe', power: 1.0, req: 10, price: 250, head: '#9aa4ad', note: 'An axe. Finally.' },
+    { name: 'Lumberjack axe', power: 1.3, req: 22, price: 1400, head: '#c23b32', note: 'Comes with a free flannel shirt (not included).' },
+    { name: 'Double-bit axe', power: 1.65, req: 40, price: 6000, head: '#59c2c9', note: 'Twice the bits.' },
+    { name: 'The Chadsaw', power: 2.2, req: 65, price: 24000, head: '#ff8a1e', note: 'Technically not an axe. Nobody is checking.' }
   ];
-  var AUTO_PRICE = 2500;
+  var AUTO_PRICE = 1500;
 
   var SKILLS = [
     ['Fishing', 'Tim does not fish. Fish cannot be chopped.'],
@@ -78,7 +78,7 @@
   function fmt(n) { return Math.floor(n).toLocaleString('en-GB'); }
 
   // ---------- xp ----------
-  function xpFor(L) { return L <= 1 ? 0 : Math.round(900 * (Math.pow(1.05, L - 1) - 1)); }
+  function xpFor(L) { return L <= 1 ? 0 : Math.round(585 * (Math.pow(1.05, L - 1) - 1)); }
   function levelOf(x) { var L = 1; while (L < MAX && x >= xpFor(L + 1)) L++; return L; }
 
   // ---------- save ----------
