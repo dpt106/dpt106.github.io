@@ -1,11 +1,12 @@
-/* Chadwood — a woodcutting game where woodcutting is the only skill.
+/* Chadlinor — a whole fantasy world, and Tim only ever chops trees in
+   Chadwood, its forest. Woodcutting is the only skill that matters.
    Tap trees, fill your pack, sell logs, buy better axes, chop bigger
-   trees, reach level 99. Renders into #chadwood. Progress and the mute
+   trees, reach level 99. Renders into #chadlinor. Progress and the mute
    setting are kept in localStorage. */
 (function () {
   'use strict';
 
-  var root = document.getElementById('chadwood');
+  var root = document.getElementById('chadlinor');
   if (!root) return;
   var FACE_SRC = root.getAttribute('data-face');
   var PORTRAIT_SRC = root.getAttribute('data-portrait');
@@ -15,7 +16,7 @@
   // ---------- constants ----------
   var COLS = 14, ROWS = 14, TS = 40, W = COLS * TS, H = ROWS * TS;
   var TICK = 0.6, INV = 28, SPEED = 4.2, MAX = 99;
-  var SAVE_KEY = 'chadwood-save', MUTE_KEY = 'chadwood-mute';
+  var SAVE_KEY = 'chadlinor-save', MUTE_KEY = 'chadlinor-mute';
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var TREES = [
@@ -56,7 +57,16 @@
   var BOT_LINES = [
     'selling birch logs 10 ea', 'anyone know where the fishing is?', 'is this game literally just trees',
     'free axe sharpening, trade me', 'brb dinner', 'lag', 'this birch is mine', 'i heard one of the trees has a face',
-    'nice axe', 'whats the sewing machine in ur profile pic about', 'where is everyone', 'logbert scammed me'
+    'nice axe', 'whats the sewing machine in ur profile pic about', 'where is everyone', 'logbert scammed me',
+    'chadlinor is so big', 'just got back from the castle, tim u missed a whole dragon'
+  ];
+  var PLACES = [
+    ['anyone been to the desert?', 'There are no trees there.'],
+    ['tim come see the castle', 'Is it made of wood?'],
+    ['dragon spotted up north, who’s coming', 'Does it have trees?'],
+    ['tim have u ever left this forest', 'Why would I.'],
+    ['theres a whole ocean in chadlinor u know', 'Can’t chop an ocean.'],
+    ['big quest starting in the city, need 1 more', 'The city has no trees.']
   ];
   var ASK_LINES = ['lvl?', 'tim do u ever stop', 'wanna do a quest?', 'tim come to the pub', 'u chop here often?', 'tim r u ignoring me'];
   var BOT_AUTO_LINES = ['is tim a bot?', 'reported.', 'hes chopping in his sleep', 'that is 100% a bot', 'tim? TIM?'];
@@ -191,7 +201,7 @@
   root.innerHTML =
     '<div class="cw-hud">' +
       '<a href="' + HOME + '" aria-label="Back to home">←</a>' +
-      '<span class="cw-title">Chadwood</span>' +
+      '<span class="cw-title">Chadlinor</span>' +
       '<span><span class="cw-k">Woodcutting</span><span class="cw-lvl"></span><span class="cw-bar" title=""><i></i></span></span>' +
       '<span><span class="cw-k">Coins</span><span class="cw-coins"></span></span>' +
       '<span class="cw-spacer"></span>' +
@@ -722,7 +732,11 @@
         if (overlayOpen) return;
         var r = Math.random();
         if (S.autoOn && r < 0.35) speak(b, pick(BOT_AUTO_LINES));
-        else if (r < 0.55) {
+        else if (r < 0.3) {
+          var pl = pick(PLACES);
+          speak(b, pl[0]);
+          setTimeout(function () { if (!S.autoOn) speak(tim, pl[1]); }, 1400 + Math.random() * 1200);
+        } else if (r < 0.55) {
           var q = pick(ASK_LINES);
           speak(b, q);
           setTimeout(function () {
@@ -1065,7 +1079,7 @@
     var act = b.getAttribute('data-act');
     audio();
     if (act === 'close') closeOv();
-    else if (act === 'start') { closeOv(); say(returning ? 'Welcome back. The trees regrew while you were away. Mostly.' : 'Welcome to Chadwood. Tap a tree. Chop it. That’s it.', 'good'); }
+    else if (act === 'start') { closeOv(); say(returning ? 'Welcome back. The trees regrew while you were away. Mostly.' : 'Welcome to Chadlinor. Tim heads straight for the trees. Tap one. Chop it. That’s it.', 'good'); }
     else if (act === 'sell') {
       var n = S.inv.length, got = sellAll();
       say('Logbert takes ' + n + ' logs and gives you ' + fmt(got) + ' coins. He seems pleased. Too pleased.', 'good');
@@ -1089,10 +1103,10 @@
     ov.setAttribute('data-kind', 'intro');
     openOv(
       '<img class="cw-face" alt="Tim" src="' + FACE_SRC + '">' +
-      '<h2>Chadwood</h2>' +
+      '<h2>Chadlinor</h2>' +
       (returning
         ? '<p>Welcome back. Woodcutting <b>' + level() + '</b>, ' + fmt(S.coins) + ' coins, and absolutely no other interests.</p>'
-        : '<p>A vast fantasy world. Dozens of skills. Quests, dragons, a whole economy.</p><p><b>Tim chops trees.</b></p>') +
+        : '<p>Welcome to Chadlinor: a vast world of quests, dragons, deserts, castles and a whole economy.</p><p><b>Tim chops trees in Chadwood.</b></p>') +
       '<p class="dim">Tap a tree to chop it. Fill your pack, sell logs to Logbert at the stall, buy better axes, chop bigger trees. Get Woodcutting to 99. That’s the whole game.</p>' +
       '<button class="cw-btn" type="button" data-act="start" data-focus>' + (returning ? 'Back to the trees' : 'Pick up the butter knife') + '</button>'
     );
@@ -1137,7 +1151,7 @@
     openOv(
       '<div class="cw-photo-wrap"><img class="cw-photo" alt="Tim, Woodcutting 99" src="' + PORTRAIT_SRC + '"></div>' +
       '<h2>Woodcutting 99</h2>' +
-      '<p>Tim has mastered the only skill he ever needed.</p>' +
+      '<p>Tim is now the finest woodcutter in all of Chadlinor. He has still not seen the rest of it.</p>' +
       '<p>You are awarded the <span class="cw-cape">Cape of Chopping</span>. It is green. It smells of sap.</p>' +
       '<p class="dim">' + fmt(S.logs) + ' logs · ' + fmt(S.felled) + ' trees felled · ' + (mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' minutes') + ' · every other skill still level 1</p>' +
       '<button class="cw-btn" type="button" data-act="close" data-focus>Keep chopping anyway</button>'
@@ -1160,7 +1174,7 @@
   resize();
   updateHud();
   renderPanel();
-  say('Chadwood. Population: Tim, some trees, and a few people who won’t stop talking.', 'sys');
+  say('Chadlinor. A whole world out there. Tim is in Chadwood, the forest bit, and is not leaving.', 'sys');
   showIntro();
   requestAnimationFrame(frame);
 })();

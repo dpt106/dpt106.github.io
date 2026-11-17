@@ -1,4 +1,4 @@
-/* Chadwood — self-contained styling for the game page only. */
+/* Chadlinor — self-contained styling for the game page only. */
 
 .cw {
   --cw-bg: #1a140e;
@@ -191,7 +191,7 @@
 .cw-page .post-header { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .cw-page .page-content { flex: 1; min-height: 0; padding: 8px 0; }
 .cw-page .page-content > .wrapper { height: 100%; max-width: 1040px; }
-.cw-page article.post, .cw-page .post-content, .cw-page #chadwood { height: 100%; }
+.cw-page article.post, .cw-page .post-content, .cw-page #chadlinor { height: 100%; }
 .cw-page .post-content { margin: 0; }
 
 @media (max-width: 720px) {
